@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900;
+  }
+}
+
+/* Tabular numbers for strict alignment in enterprise gold ledgers */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
