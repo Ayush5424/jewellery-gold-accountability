@@ -1,0 +1,46 @@
+package com.coimbatore.jewellery.web;
+
+import com.coimbatore.jewellery.service.StockService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/stock")
+public class StockController {
+
+    private final StockService stockService;
+
+    public StockController(StockService stockService) {
+        this.stockService = stockService;
+    }
+
+    @GetMapping("/summary")
+    @PreAuthorize("hasAnyAuthority('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')")
+    public ResponseEntity<Map<String, Object>> getStockSummary() {
+        return ResponseEntity.ok(stockService.getLiveStockSummary());
+    }
+
+    @GetMapping("/statement")
+    @PreAuthorize("hasAuthority('ROLE_FINANCE_HEAD')")
+    public ResponseEntity<Map<String, Object>> getDailyStockStatement() {
+        Map<String, Object> summary = stockService.getLiveStockSummary();
+        summary.put("statementDate", LocalDate.now().toString());
+        summary.put("companyName", "Coimbatore Fine Jewellery Ltd.");
+        summary.put("operatingUnits", List.of(
+                Map.of("unit", "Central Workshop (Coimbatore)", "type", "Manufacturing", "activeKarigars", 18),
+                Map.of("unit", "RS Puram Showroom", "type", "Retail", "activeKarigars", 5),
+                Map.of("unit", "Cross Cut Road Showroom", "type", "Retail", "activeKarigars", 6),
+                Map.of("unit", "Gandhipuram Showroom", "type", "Retail", "activeKarigars", 4),
+                Map.of("unit", "Town Hall Showroom", "type", "Retail", "activeKarigars", 4),
+                Map.of("unit", "Peelamedu Showroom", "type", "Retail", "activeKarigars", 3)
+        ));
+        return ResponseEntity.ok(summary);
+    }
+}

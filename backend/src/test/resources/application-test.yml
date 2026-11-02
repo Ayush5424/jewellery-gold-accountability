@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:jewellery_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;LOCK_TIMEOUT=10000;DEFAULT_LOCK_TIMEOUT=10000
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+app:
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    expiration-ms: 86400000
+  ai-service:
+    url: http://localhost:8000
+  loss-detection:
+    min-completed-jobs-for-drift: 5
+    historical-drift-tolerance-pct: 0.10

@@ -1,0 +1,34 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: jewellery-gold-accountability
+  profiles:
+    active: dev
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/jewellery_gold_db}
+    username: ${SPRING_DATASOURCE_USERNAME:gold_admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:gold_secure_password_coimbatore_2026}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  ai-service:
+    url: ${AI_SERVICE_URL:http://localhost:8000}
+  loss-detection:
+    min-completed-jobs-for-drift: 5
+    historical-drift-tolerance-pct: 0.10
