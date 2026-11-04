@@ -2,6 +2,7 @@ package com.coimbatore.jewellery.domain.entity;
 
 import com.coimbatore.jewellery.domain.enums.AlertStatus;
 import com.coimbatore.jewellery.domain.enums.AlertType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -12,6 +13,7 @@ import java.time.Instant;
     @Index(name = "idx_alert_karigar", columnList = "karigar_id"),
     @Index(name = "idx_alert_status", columnList = "status")
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class LossAlert {
 
     @Id

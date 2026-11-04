@@ -40,8 +40,8 @@ public class GoldLedgerController {
 
     @PostMapping("/issue")
     @PreAuthorize("hasAnyAuthority('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')")
-    public ResponseEntity<GoldLedgerEntry> issueGold(@Valid @RequestBody AppDto.IssueGoldRequest request,
-                                                     Authentication auth) {
+    public ResponseEntity<AppDto.GoldLedgerEntryResponse> issueGold(@Valid @RequestBody AppDto.IssueGoldRequest request,
+                                                                   Authentication auth) {
         GoldLedgerEntry entry = ledgerService.recordGoldIssue(
                 request.jobId(),
                 request.grossWeight(),
@@ -51,13 +51,13 @@ public class GoldLedgerController {
                 request.idempotencyKey(),
                 auth.getName()
         );
-        return ResponseEntity.ok(entry);
+        return ResponseEntity.ok(AppDto.GoldLedgerEntryResponse.from(entry));
     }
 
     @PostMapping("/receive")
     @PreAuthorize("hasAnyAuthority('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')")
-    public ResponseEntity<GoldLedgerEntry> receiveGold(@Valid @RequestBody AppDto.ReceiveGoldRequest request,
-                                                       Authentication auth) {
+    public ResponseEntity<AppDto.GoldLedgerEntryResponse> receiveGold(@Valid @RequestBody AppDto.ReceiveGoldRequest request,
+                                                                     Authentication auth) {
         GoldLedgerEntry entry = ledgerService.recordGoldReceipt(
                 request.jobId(),
                 request.transactionType(),
@@ -70,25 +70,28 @@ public class GoldLedgerController {
                 request.idempotencyKey(),
                 auth.getName()
         );
-        return ResponseEntity.ok(entry);
+        return ResponseEntity.ok(AppDto.GoldLedgerEntryResponse.from(entry));
     }
 
     @PostMapping("/ledger/reverse")
     @PreAuthorize("hasAuthority('ROLE_FINANCE_HEAD')")
-    public ResponseEntity<GoldLedgerEntry> reverseVoucher(@Valid @RequestBody AppDto.ReverseVoucherRequest request,
-                                                          Authentication auth) {
+    public ResponseEntity<AppDto.GoldLedgerEntryResponse> reverseVoucher(@Valid @RequestBody AppDto.ReverseVoucherRequest request,
+                                                                        Authentication auth) {
         GoldLedgerEntry reversal = ledgerService.createReversalEntry(request.voucherNumber(), request.reason(), auth.getName());
-        return ResponseEntity.ok(reversal);
+        return ResponseEntity.ok(AppDto.GoldLedgerEntryResponse.from(reversal));
     }
 
     @GetMapping("/ledger")
     @PreAuthorize("hasAnyAuthority('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')")
-    public ResponseEntity<List<GoldLedgerEntry>> getRecentLedgerEntries() {
-        return ResponseEntity.ok(ledgerRepository.findTop50ByOrderByCreatedAtDesc());
+    public ResponseEntity<List<AppDto.GoldLedgerEntryResponse>> getRecentLedgerEntries() {
+        return ResponseEntity.ok(ledgerRepository.findTop50ByOrderByCreatedAtDesc()
+                .stream()
+                .map(AppDto.GoldLedgerEntryResponse::from)
+                .toList());
     }
 
     @GetMapping("/ledger/job/{jobId}")
-    public ResponseEntity<List<GoldLedgerEntry>> getLedgerByJob(@PathVariable Long jobId, Authentication auth) {
+    public ResponseEntity<List<AppDto.GoldLedgerEntryResponse>> getLedgerByJob(@PathVariable Long jobId, Authentication auth) {
         User user = userRepository.findByUsername(auth.getName()).orElseThrow();
         if (user.getRole() == UserRole.ROLE_KARIGAR) {
             JobOrder job = jobRepository.findById(jobId)
@@ -97,11 +100,14 @@ public class GoldLedgerController {
                 throw new AccessDeniedException("Karigars can only view ledger entries of their own assigned jobs.");
             }
         }
-        return ResponseEntity.ok(ledgerRepository.findByJobOrderIdOrderByCreatedAtAsc(jobId));
+        return ResponseEntity.ok(ledgerRepository.findByJobOrderIdOrderByCreatedAtAsc(jobId)
+                .stream()
+                .map(AppDto.GoldLedgerEntryResponse::from)
+                .toList());
     }
 
     @GetMapping("/ledger/karigar/{karigarId}")
-    public ResponseEntity<List<GoldLedgerEntry>> getLedgerByKarigar(@PathVariable Long karigarId, Authentication auth) {
+    public ResponseEntity<List<AppDto.GoldLedgerEntryResponse>> getLedgerByKarigar(@PathVariable Long karigarId, Authentication auth) {
         User user = userRepository.findByUsername(auth.getName()).orElseThrow();
         if (user.getRole() == UserRole.ROLE_KARIGAR) {
             if (user.getKarigar() == null || !user.getKarigar().getId().equals(karigarId)) {
@@ -109,6 +115,9 @@ public class GoldLedgerController {
             }
         }
 
-        return ResponseEntity.ok(ledgerRepository.findByKarigarIdOrderByCreatedAtDesc(karigarId));
+        return ResponseEntity.ok(ledgerRepository.findByKarigarIdOrderByCreatedAtDesc(karigarId)
+                .stream()
+                .map(AppDto.GoldLedgerEntryResponse::from)
+                .toList());
     }
 }

@@ -26,17 +26,17 @@ public class LossAlertController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LossAlert>> listAlerts(@RequestParam(required = false) AlertStatus status) {
-        if (status != null) {
-            return ResponseEntity.ok(alertRepository.findByStatusOrderByCreatedAtDesc(status));
-        }
-        return ResponseEntity.ok(alertRepository.findAllByOrderByCreatedAtDesc());
+    public ResponseEntity<List<AppDto.LossAlertResponse>> listAlerts(@RequestParam(required = false) AlertStatus status) {
+        List<LossAlert> alerts = (status != null)
+                ? alertRepository.findByStatusOrderByCreatedAtDesc(status)
+                : alertRepository.findAllByOrderByCreatedAtDesc();
+        return ResponseEntity.ok(alerts.stream().map(AppDto.LossAlertResponse::from).toList());
     }
 
     @PostMapping("/{id}/review")
-    public ResponseEntity<LossAlert> reviewAlert(@PathVariable Long id,
-                                                 @Valid @RequestBody AppDto.ReviewAlertRequest request,
-                                                 Authentication auth) {
+    public ResponseEntity<AppDto.LossAlertResponse> reviewAlert(@PathVariable Long id,
+                                                               @Valid @RequestBody AppDto.ReviewAlertRequest request,
+                                                               Authentication auth) {
         LossAlert alert = alertRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Alert not found: " + id));
 
@@ -45,6 +45,7 @@ public class LossAlertController {
         alert.setReviewedBy(auth.getName());
         alert.setReviewedAt(Instant.now());
 
-        return ResponseEntity.ok(alertRepository.save(alert));
+        LossAlert saved = alertRepository.save(alert);
+        return ResponseEntity.ok(AppDto.LossAlertResponse.from(saved));
     }
 }

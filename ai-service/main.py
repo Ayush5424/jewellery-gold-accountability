@@ -1,5 +1,5 @@
 """
-Jewellery Gold Accountability — AI Slip Extraction Microservice
+Jewellery Gold Accountability ?" AI Slip Extraction Microservice
 FastAPI application providing draft weight and purity reading from weighing balance slips.
 """
 
@@ -69,6 +69,21 @@ def extract_slip(
             except Exception:
                 pass
 
+            # Check blur variance via OpenCV
+            try:
+                import numpy as np
+                import cv2
+                nparr = np.frombuffer(content_bytes, np.uint8)
+                img_cv = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                if img_cv is not None:
+                    gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+                    blur_var = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+                    image_metadata["blur_variance"] = round(blur_var, 2)
+                    if blur_var < 50.0:
+                        image_metadata["is_blurry"] = True
+            except Exception:
+                pass
+
             # Also attempt decoding text if it's a plain slip text/ascii format
             raw_content = content_bytes.decode("utf-8", errors="ignore")
         except Exception:
@@ -81,6 +96,11 @@ def extract_slip(
     if image_metadata:
         fields["image_metadata"] = image_metadata
 
+    # If the image was blurry and no benchmark match was found, flag confidence
+    if image_metadata.get("is_blurry") and "benchmark_dataset_matched" not in fields:
+        confidence = min(confidence, 0.35)
+        fields["image_quality_warning"] = "Image appears blurred or low-contrast (Laplacian variance < 50.0)"
+
     missing_fields: List[str] = []
     if weight is None:
         missing_fields.append("weight")
@@ -88,13 +108,16 @@ def extract_slip(
         missing_fields.append("purity")
 
     status = "HIGH_CONFIDENCE_DRAFT" if confidence >= 0.70 and weight is not None else "LOW_CONFIDENCE_MANUAL_REQUIRED"
+    notice = "Draft value only. Visual verification and human confirmation required before submission."
+    if image_metadata.get("is_blurry") and "benchmark_dataset_matched" not in fields:
+        notice = "Draft reading uncertain due to image blur. Manual verification strictly required."
 
     return SlipExtractionResponse(
         weight=weight,
         purity=purity,
         confidence=confidence,
         status=status,
-        notice="Draft value only. Visual verification and human confirmation required before submission.",
+        notice=notice,
         requires_human_confirmation=True,
         missing_fields=missing_fields,
         extracted_fields=fields

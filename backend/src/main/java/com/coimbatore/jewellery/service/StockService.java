@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,7 +40,7 @@ public class StockService {
 
     /**
      * Answers: "Where is every gram of fine gold right now?"
-     * Includes Opening Balance, Issued, Recovered by component, WIP with Karigars, and Closing Balance.
+     * Live realtime aggregate across all database records.
      */
     public Map<String, Object> getLiveStockSummary() {
         BigDecimal totalIssued = safe(ledgerRepository.sumFineWeightByType(TransactionType.ISSUE));
@@ -77,10 +80,79 @@ public class StockService {
     }
 
     /**
+     * Reconciles daily stock movements for a specific date:
+     * Opening Balance + Day Receipts - Day Issues = Closing Vault Balance.
+     * Conserves mass with Karigar WIP and Refiner balances.
+     */
+    public Map<String, Object> getDailyStockStatement(String dateStr) {
+        LocalDate date;
+        try {
+            date = (dateStr != null && !dateStr.isBlank()) ? LocalDate.parse(dateStr) : LocalDate.now();
+        } catch (Exception e) {
+            date = LocalDate.now();
+        }
+
+        Instant startOfDay = date.atStartOfDay(ZoneOffset.UTC).toInstant();
+        Instant endOfDay = date.atTime(23, 59, 59, 999999999).atZone(ZoneOffset.UTC).toInstant();
+
+        // 1. Prior movements before start of this date
+        BigDecimal priorIssued = safe(ledgerRepository.sumFineWeightByTypeBefore(TransactionType.ISSUE, startOfDay));
+        BigDecimal priorJewellery = safe(ledgerRepository.sumFineWeightByTypeBefore(TransactionType.RECEIPT_JEWELLERY, startOfDay));
+        BigDecimal priorScrap = safe(ledgerRepository.sumFineWeightByTypeBefore(TransactionType.RECEIPT_SCRAP, startOfDay));
+        BigDecimal priorFilings = safe(ledgerRepository.sumFineWeightByTypeBefore(TransactionType.RECEIPT_FILINGS, startOfDay));
+        BigDecimal priorRecovered = priorJewellery.add(priorScrap).add(priorFilings);
+
+        BigDecimal openingVaultFine = SEEDED_VAULT_OPENING_FINE.subtract(priorIssued).add(priorRecovered)
+                .setScale(GoldAccountingCalculator.WEIGHT_SCALE, GoldAccountingCalculator.ROUNDING_MODE);
+
+        // 2. Day's movements on this date
+        BigDecimal dayIssued = safe(ledgerRepository.sumFineWeightByTypeBetween(TransactionType.ISSUE, startOfDay, endOfDay));
+        BigDecimal dayJewellery = safe(ledgerRepository.sumFineWeightByTypeBetween(TransactionType.RECEIPT_JEWELLERY, startOfDay, endOfDay));
+        BigDecimal dayScrap = safe(ledgerRepository.sumFineWeightByTypeBetween(TransactionType.RECEIPT_SCRAP, startOfDay, endOfDay));
+        BigDecimal dayFilings = safe(ledgerRepository.sumFineWeightByTypeBetween(TransactionType.RECEIPT_FILINGS, startOfDay, endOfDay));
+        BigDecimal dayRecovered = dayJewellery.add(dayScrap).add(dayFilings);
+
+        // 3. Day's closing vault balance
+        BigDecimal closingVaultFine = openingVaultFine.subtract(dayIssued).add(dayRecovered)
+                .setScale(GoldAccountingCalculator.WEIGHT_SCALE, GoldAccountingCalculator.ROUNDING_MODE);
+
+        // 4. Cumulative movements up to end of this date
+        BigDecimal cumulativeIssued = priorIssued.add(dayIssued);
+        BigDecimal cumulativeRecovered = priorRecovered.add(dayRecovered);
+        BigDecimal goldWithKarigars = cumulativeIssued.subtract(cumulativeRecovered).max(BigDecimal.ZERO)
+                .setScale(GoldAccountingCalculator.WEIGHT_SCALE, GoldAccountingCalculator.ROUNDING_MODE);
+
+        BigDecimal refinerFine = SEEDED_REFINER_FINE
+                .setScale(GoldAccountingCalculator.WEIGHT_SCALE, GoldAccountingCalculator.ROUNDING_MODE);
+
+        BigDecimal totalTrackedFine = closingVaultFine.add(goldWithKarigars).add(refinerFine)
+                .setScale(GoldAccountingCalculator.WEIGHT_SCALE, GoldAccountingCalculator.ROUNDING_MODE);
+
+        long pendingAlertsCount = alertRepository.countByStatus(com.coimbatore.jewellery.domain.enums.AlertStatus.PENDING_REVIEW);
+
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("statementDate", date.toString());
+        summary.put("openingBalanceFineGold", openingVaultFine);
+        summary.put("vaultFineGold", closingVaultFine);
+        summary.put("goldWithKarigars", goldWithKarigars);
+        summary.put("goldAtRefiner", refinerFine);
+        summary.put("totalTrackedFineGold", totalTrackedFine);
+        summary.put("pendingAlertsCount", pendingAlertsCount);
+        summary.put("totalIssuedFine", dayIssued.setScale(3, GoldAccountingCalculator.ROUNDING_MODE));
+        summary.put("totalRecoveredFine", dayRecovered.setScale(3, GoldAccountingCalculator.ROUNDING_MODE));
+        summary.put("returnedJewelleryFine", dayJewellery.setScale(3, GoldAccountingCalculator.ROUNDING_MODE));
+        summary.put("returnedScrapFine", dayScrap.setScale(3, GoldAccountingCalculator.ROUNDING_MODE));
+        summary.put("returnedFilingsFine", dayFilings.setScale(3, GoldAccountingCalculator.ROUNDING_MODE));
+        summary.put("closingBalanceFineGold", totalTrackedFine);
+        summary.put("companyName", "Coimbatore Fine Jewellery Ltd.");
+        return summary;
+    }
+
+    /**
      * Generates a Tally-compatible XML stock journal voucher export.
      */
     public String generateTallyXmlExport(String statementDate) {
-        Map<String, Object> stock = getLiveStockSummary();
+        Map<String, Object> stock = getDailyStockStatement(statementDate);
         return String.format("""
                 <ENVELOPE>
                     <HEADER>
@@ -126,9 +198,12 @@ public class StockService {
                 </ENVELOPE>
                 """,
                 statementDate.replace("-", ""),
-                stock.get("vaultFineGold"), stock.get("vaultFineGold"),
-                stock.get("goldWithKarigars"), stock.get("goldWithKarigars"),
-                stock.get("goldAtRefiner"), stock.get("goldAtRefiner")
+                stock.get("vaultFineGold"),
+                stock.get("vaultFineGold"),
+                stock.get("goldWithKarigars"),
+                stock.get("goldWithKarigars"),
+                stock.get("goldAtRefiner"),
+                stock.get("goldAtRefiner")
         );
     }
 }

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { api, saveFormDraft, loadFormDraft, clearFormDraft, generateIdempotencyKey } from '../api/client';
 import { Karigar, JobOrder } from '../types';
+import { useAuth } from '../context/AuthContext';
 import { AlignedDecimal } from '../components/AlignedDecimal';
 import { ReviewModal } from '../components/ReviewModal';
 import { AlertBanner } from '../components/AlertBanner';
-import { Sparkles, Calculator, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Sparkles, Calculator, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
 
 export const IssueGoldPage: React.FC<{ onNavigateToLedger: (jobId: number) => void }> = ({ onNavigateToLedger }) => {
+  const { user } = useAuth();
   const [karigars, setKarigars] = useState<Karigar[]>([]);
   const [jobs, setJobs] = useState<JobOrder[]>([]);
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ export const IssueGoldPage: React.FC<{ onNavigateToLedger: (jobId: number) => vo
     remarks: string;
     aiExtracted: boolean;
   }>({
-    karigarId: '',
+    karigarId: user?.karigarId ? String(user.karigarId) : '',
     jobId: '',
     grossWeight: '',
     purity: '91.60', // Coimbatore 22K benchmark default
@@ -38,19 +40,67 @@ export const IssueGoldPage: React.FC<{ onNavigateToLedger: (jobId: number) => vo
   // Review Dialog State
   const [showReview, setShowReview] = useState(false);
 
+  const isKarigarUser = user?.role === 'ROLE_KARIGAR';
+
   useEffect(() => {
+    setLoading(true);
     // Load cached draft if available
     const saved = loadFormDraft<typeof formData>('issue_gold');
     if (saved) {
-      setFormData(saved);
+      setFormData(prev => ({ ...prev, ...saved }));
     }
 
-    api.getKarigars().then(setKarigars).catch(console.error);
-    api.getJobs().then(setJobs).catch(console.error);
-  }, []);
+    // Load jobs & karigars
+    const loadData = async () => {
+      try {
+        const jobsData = await api.getJobs();
+        const activeJobs = jobsData.filter(j => j.status !== 'RECONCILED');
+        setJobs(activeJobs);
+
+        if (!isKarigarUser) {
+          try {
+            const karigarsData = await api.getKarigars();
+            setKarigars(karigarsData);
+          } catch (e) {
+            console.warn('Could not fetch karigar master list', e);
+          }
+        }
+      } catch (err: any) {
+        console.error('Error loading jobs', err);
+        setErrorMessage('Failed to load active job orders.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [isKarigarUser]);
 
   const handleFieldChange = (field: keyof typeof formData, value: any) => {
     const updated = { ...formData, [field]: value };
+    setFormData(updated);
+    saveFormDraft('issue_gold', updated);
+  };
+
+  // Job selection logic: selecting a job automatically sets karigarId if known
+  const handleJobSelect = (jobId: string) => {
+    const matchedJob = jobs.find(j => String(j.id) === jobId);
+    const updated = {
+      ...formData,
+      jobId,
+      karigarId: matchedJob?.karigar ? String(matchedJob.karigar.id) : formData.karigarId,
+    };
+    setFormData(updated);
+    saveFormDraft('issue_gold', updated);
+  };
+
+  // Karigar selection logic: choosing an artisan filters available jobs
+  const handleKarigarSelect = (karigarId: string) => {
+    const updated = {
+      ...formData,
+      karigarId,
+      jobId: '', // Reset job if artisan changes
+    };
     setFormData(updated);
     saveFormDraft('issue_gold', updated);
   };
@@ -78,7 +128,7 @@ export const IssueGoldPage: React.FC<{ onNavigateToLedger: (jobId: number) => vo
       }
       handleFieldChange('aiExtracted', true);
       setAiDraftNotice(
-        `AI draft reading extracted (Confidence: ${Math.round(res.confidence * 100)}%). Notice: Manual confirmation is strictly required.`
+        `AI draft reading extracted from scale slip (Confidence: ${Math.round(res.confidence * 100)}%). Verification required before submit.`
       );
     } catch (err) {
       setAiDraftNotice('Unable to extract draft values from slip image. Please enter weights manually.');
@@ -88,14 +138,30 @@ export const IssueGoldPage: React.FC<{ onNavigateToLedger: (jobId: number) => vo
   };
 
   const handleConfirmSubmit = async () => {
+    if (!formData.jobId) {
+      setErrorMessage('Please select an active Job Order.');
+      setShowReview(false);
+      return;
+    }
+    if (grossNum <= 0) {
+      setErrorMessage('Gross weight must be greater than 0.000 g.');
+      setShowReview(false);
+      return;
+    }
+    if (purityNum <= 0 || purityNum > 100) {
+      setErrorMessage('Purity percentage must be between 0.01% and 100.00%.');
+      setShowReview(false);
+      return;
+    }
+
     setSubmitting(true);
     setErrorMessage(null);
     try {
       const idempotencyKey = generateIdempotencyKey();
       const res = await api.issueGold({
         jobId: Number(formData.jobId),
-        grossWeight: Number(formData.grossWeight),
-        purity: Number(formData.purity),
+        grossWeight: grossNum,
+        purity: purityNum,
         remarks: formData.remarks,
         aiExtracted: formData.aiExtracted,
         idempotencyKey,
@@ -114,9 +180,11 @@ export const IssueGoldPage: React.FC<{ onNavigateToLedger: (jobId: number) => vo
 
   const selectedKarigar = karigars.find(k => String(k.id) === formData.karigarId);
   const selectedJob = jobs.find(j => String(j.id) === formData.jobId);
-  const availableJobsForKarigar = formData.karigarId
-    ? jobs.filter(j => String(j.karigar.id) === formData.karigarId && j.status !== 'RECONCILED')
-    : [];
+
+  // Available jobs: if karigarId is chosen, filter by that karigar; otherwise show all active jobs
+  const availableJobs = formData.karigarId
+    ? jobs.filter(j => String(j.karigar?.id) === formData.karigarId && j.status !== 'RECONCILED')
+    : jobs.filter(j => j.status !== 'RECONCILED');
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -160,52 +228,90 @@ export const IssueGoldPage: React.FC<{ onNavigateToLedger: (jobId: number) => vo
       >
         {/* Group 1: Job & Artisan Assignment */}
         <div className="bg-white p-5 rounded border border-slate-200 shadow-2xs space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
-            1. Job Order & Artisan Assignment
-          </h2>
+          <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              1. Job Order & Artisan Assignment
+            </h2>
+            {loading && (
+              <span className="text-[11px] text-slate-500 flex items-center gap-1 font-mono">
+                <RefreshCw className="w-3 h-3 animate-spin" /> Fetching active orders...
+              </span>
+            )}
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            {/* Karigar Select or Locked Badge for Karigars */}
             <div>
-              <label className="block text-slate-700 font-medium mb-1">Select Karigar</label>
-              <select
-                required
-                value={formData.karigarId}
-                onChange={(e) => {
-                  handleFieldChange('karigarId', e.target.value);
-                  handleFieldChange('jobId', '');
-                }}
-                className="w-full p-2 border border-slate-300 rounded focus:border-slate-800 focus:outline-hidden bg-white text-slate-800 font-medium"
-              >
-                <option value="">— Choose Artisan —</option>
-                {karigars.map((k) => (
-                  <option key={k.id} value={k.id}>
-                    {k.karigarCode} • {k.name} ({k.workshopLocation})
-                  </option>
-                ))}
-              </select>
+              <label className="block text-slate-700 font-medium mb-1">
+                {isKarigarUser ? 'Assigned Artisan' : 'Select Karigar (Filter)'}
+              </label>
+              {isKarigarUser ? (
+                <div className="p-2.5 bg-slate-100 border border-slate-200 rounded text-slate-800 font-semibold text-xs">
+                  {user?.fullName || 'Master Karigar'} (Self)
+                </div>
+              ) : (
+                <select
+                  value={formData.karigarId}
+                  onChange={(e) => handleKarigarSelect(e.target.value)}
+                  className="w-full p-2 border border-slate-300 rounded focus:border-slate-800 focus:outline-hidden bg-white text-slate-800 font-medium"
+                >
+                  <option value="">— All Active Artisans —</option>
+                  {karigars.map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.karigarCode} • {k.name} ({k.workshopLocation})
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
+            {/* Active Job Order Select */}
             <div>
               <label className="block text-slate-700 font-medium mb-1">Select Active Job Order</label>
-              <select
-                required
-                value={formData.jobId}
-                disabled={!formData.karigarId}
-                onChange={(e) => handleFieldChange('jobId', e.target.value)}
-                className="w-full p-2 border border-slate-300 rounded focus:border-slate-800 focus:outline-hidden bg-white text-slate-800 font-medium disabled:bg-slate-100"
-              >
-                <option value="">— Choose Job —</option>
-                {availableJobsForKarigar.map((j) => (
-                  <option key={j.id} value={j.id}>
-                    {j.jobCode} • {j.itemCategory} ({j.description})
-                  </option>
-                ))}
-              </select>
-              {formData.karigarId && availableJobsForKarigar.length === 0 && (
-                <p className="text-[11px] text-amber-700 mt-1">No open jobs found for this karigar. Create a job first.</p>
+              {availableJobs.length === 0 && !loading ? (
+                <div className="p-2.5 bg-amber-50 border border-amber-200 rounded text-[11px] text-amber-800 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>No active fabrication orders found. Create a job first.</span>
+                </div>
+              ) : (
+                <select
+                  required
+                  value={formData.jobId}
+                  onChange={(e) => handleJobSelect(e.target.value)}
+                  className="w-full p-2 border border-slate-300 rounded focus:border-slate-800 focus:outline-hidden bg-white text-slate-800 font-medium"
+                >
+                  <option value="">— Choose Active Job Order —</option>
+                  {availableJobs.map((j) => (
+                    <option key={j.id} value={j.id}>
+                      {j.jobCode} • {j.karigar ? j.karigar.name : 'Artisan'} — {j.itemCategory} (Issued: {Number(j.issuedFineWeight).toFixed(3)}g, Outstanding: {Number(j.outstandingFineWeight).toFixed(3)}g)
+                    </option>
+                  ))}
+                </select>
               )}
             </div>
           </div>
+
+          {/* Selected Job Card Preview */}
+          {selectedJob && (
+            <div className="bg-slate-50 border border-slate-200 rounded p-3 text-xs grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
+              <div>
+                <span className="text-slate-500">Order Code:</span>
+                <p className="font-semibold text-slate-900 font-mono">{selectedJob.jobCode}</p>
+              </div>
+              <div>
+                <span className="text-slate-500">Artisan Assigned:</span>
+                <p className="font-semibold text-slate-900">{selectedJob.karigar ? selectedJob.karigar.name : 'Assigned'}</p>
+              </div>
+              <div>
+                <span className="text-slate-500">Item Category:</span>
+                <p className="font-semibold text-slate-900">{selectedJob.itemCategory}</p>
+              </div>
+              <div>
+                <span className="text-slate-500">Allowed Wastage:</span>
+                <p className="font-semibold text-slate-700 font-mono">{Number(selectedJob.allowedWastagePercent).toFixed(2)}%</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Group 2: Fine Gold Measurement & Verification */}
@@ -240,7 +346,7 @@ export const IssueGoldPage: React.FC<{ onNavigateToLedger: (jobId: number) => vo
                   placeholder="e.g. 120.000"
                   value={formData.grossWeight}
                   onChange={(e) => handleFieldChange('grossWeight', e.target.value)}
-                  className="w-full p-2 border border-slate-300 rounded focus:border-slate-800 focus:outline-hidden font-mono font-medium text-slate-900 text-sm"
+                  className="w-full p-2 border border-slate-300 rounded font-mono font-medium text-slate-900 text-sm focus:border-slate-800 focus:outline-hidden"
                 />
                 <span className="absolute right-3 top-2 text-slate-400 font-sans text-xs">grams</span>
               </div>
@@ -248,7 +354,7 @@ export const IssueGoldPage: React.FC<{ onNavigateToLedger: (jobId: number) => vo
 
             <div>
               <label className="block text-slate-700 font-medium mb-1">
-                Gold Purity Percentage <span className="text-slate-400 font-normal">2 decimal places</span>
+                Gold Purity (%) <span className="text-slate-400 font-normal">2 decimal places</span>
               </label>
               <div className="relative">
                 <input
@@ -260,72 +366,67 @@ export const IssueGoldPage: React.FC<{ onNavigateToLedger: (jobId: number) => vo
                   placeholder="e.g. 91.60"
                   value={formData.purity}
                   onChange={(e) => handleFieldChange('purity', e.target.value)}
-                  className="w-full p-2 border border-slate-300 rounded focus:border-slate-800 focus:outline-hidden font-mono font-medium text-slate-900 text-sm"
+                  className="w-full p-2 border border-slate-300 rounded font-mono font-medium text-slate-900 text-sm focus:border-slate-800 focus:outline-hidden"
                 />
                 <span className="absolute right-3 top-2 text-slate-400 font-sans text-xs">%</span>
               </div>
             </div>
           </div>
 
-          {/* Real-time Centralized Formula Display */}
-          <div className="bg-slate-50 border border-slate-200 rounded p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">
-                Computed Fine Gold Weight
-              </span>
-              <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-                formula: grossWeight × purity / 100
-              </p>
-            </div>
-            <div className="text-right">
-              <AlignedDecimal
-                value={calculatedFine}
-                className="text-2xl font-bold text-amber-700"
-              />
-            </div>
-          </div>
-
           <div>
-            <label className="block text-slate-700 font-medium mb-1 text-xs">Voucher Remarks</label>
+            <label className="block text-slate-700 font-medium mb-1">Internal Reference / Allocation Remarks</label>
             <input
               type="text"
               value={formData.remarks}
               onChange={(e) => handleFieldChange('remarks', e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded focus:border-slate-800 focus:outline-hidden text-xs text-slate-800"
+              className="w-full p-2 border border-slate-300 rounded text-slate-800 focus:border-slate-800 focus:outline-hidden text-xs"
             />
+          </div>
+
+          {/* Computed Fine Gold Display */}
+          <div className="bg-slate-50 border border-slate-200 rounded p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
+            <div>
+              <span className="font-semibold text-slate-600">Pure Fine Gold (999.0 Equivalent)</span>
+              <p className="text-[11px] text-slate-400">Formula: (Gross Weight × Purity) / 100 with standard rounding</p>
+            </div>
+            <div className="text-right">
+              <AlignedDecimal value={calculatedFine} className="text-2xl font-bold text-amber-900 font-mono" />
+            </div>
           </div>
         </div>
 
-        {/* Submit Review Trigger */}
-        <div className="flex justify-end gap-3 pt-2">
+        {/* Submit Actions */}
+        <div className="flex justify-end pt-2">
           <button
             type="submit"
-            disabled={!formData.jobId || calculatedFine <= 0}
-            className="px-5 py-2.5 bg-slate-900 text-white rounded text-xs font-semibold hover:bg-slate-800 focus:outline-hidden disabled:bg-slate-300 disabled:cursor-not-allowed shadow-xs"
+            disabled={submitting || !formData.jobId || grossNum <= 0}
+            className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded text-xs font-semibold shadow-2xs transition-colors disabled:opacity-50"
           >
-            Review & Commit Issue Voucher &rarr;
+            {submitting ? 'Recording Issue...' : 'Review & Confirm Gold Issue'}
           </button>
         </div>
       </form>
 
-      {/* Explicit Review Modal Before Committing */}
-      <ReviewModal
-        isOpen={showReview}
-        title="Confirm Fine Gold Issue Transaction"
-        subtitle="Verify all physical measurements against weighing slip before writing to ledger"
-        isLoading={submitting}
-        onCancel={() => setShowReview(false)}
-        onConfirm={handleConfirmSubmit}
-        items={[
-          { label: 'Artisan Name', value: selectedKarigar?.name || '—' },
-          { label: 'Karigar Code', value: selectedKarigar?.karigarCode || '—' },
-          { label: 'Job Order', value: selectedJob?.jobCode || '—' },
-          { label: 'Gross Weight', value: grossNum, isWeight: true },
-          { label: 'Gold Purity', value: `${purityNum.toFixed(2)} %` },
-          { label: 'Calculated Fine Gold', value: calculatedFine, isWeight: true },
-          { label: 'AI Extraction Flag', value: formData.aiExtracted ? 'Yes (Verified by Clerk)' : 'Manual Entry' },
-        ]}
-      />
+      {/* Review Dialog */}
+      {showReview && selectedJob && (
+        <ReviewModal
+          isOpen={showReview}
+          title="Confirm Gold Issuance Transaction"
+          subtitle={`Debiting Vault and Crediting Artisan ${selectedJob.karigar ? selectedJob.karigar.name : 'Artisan'}`}
+          onCancel={() => setShowReview(false)}
+          onConfirm={handleConfirmSubmit}
+          isLoading={submitting}
+          items={[
+            { label: 'Job Order', value: selectedJob.jobCode },
+            { label: 'Assigned Artisan', value: selectedJob.karigar ? selectedJob.karigar.name : 'Assigned' },
+            { label: 'Item Category', value: selectedJob.itemCategory },
+            { label: 'Gross Scale Weight', value: grossNum, isWeight: true },
+            { label: 'Fineness / Purity', value: `${purityNum.toFixed(2)} %` },
+            { label: 'Calculated Pure Fine Gold', value: calculatedFine, isWeight: true },
+            { label: 'Allocation Remarks', value: formData.remarks || 'Standard bullion issuance' },
+          ]}
+        />
+      )}
     </div>
   );
 };

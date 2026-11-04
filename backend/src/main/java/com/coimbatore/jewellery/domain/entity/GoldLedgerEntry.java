@@ -1,6 +1,7 @@
 package com.coimbatore.jewellery.domain.entity;
 
 import com.coimbatore.jewellery.domain.enums.TransactionType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -14,6 +15,7 @@ import java.time.Instant;
     @Index(name = "idx_ledger_created_at", columnList = "created_at"),
     @Index(name = "idx_ledger_idempotency", columnList = "idempotency_key", unique = true)
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class GoldLedgerEntry {
 
     @Id

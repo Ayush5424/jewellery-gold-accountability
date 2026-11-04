@@ -34,9 +34,7 @@ public class StockController {
     @PreAuthorize("hasAuthority('ROLE_FINANCE_HEAD')")
     public ResponseEntity<Map<String, Object>> getDailyStockStatement(@RequestParam(required = false) String date) {
         String effectiveDate = (date != null && !date.isBlank()) ? date : LocalDate.now().toString();
-        Map<String, Object> summary = stockService.getLiveStockSummary();
-        summary.put("statementDate", effectiveDate);
-        summary.put("companyName", "Coimbatore Fine Jewellery Ltd.");
+        Map<String, Object> summary = stockService.getDailyStockStatement(effectiveDate);
         summary.put("operatingUnits", List.of(
                 Map.of("unit", "Central Workshop (Coimbatore)", "type", "Manufacturing", "activeKarigars", 18),
                 Map.of("unit", "RS Puram Showroom", "type", "Retail", "activeKarigars", 5),

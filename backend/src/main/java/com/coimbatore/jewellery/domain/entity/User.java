@@ -1,6 +1,7 @@
 package com.coimbatore.jewellery.domain.entity;
 
 import com.coimbatore.jewellery.domain.enums.UserRole;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.Instant;
 
@@ -8,6 +9,7 @@ import java.time.Instant;
 @Table(name = "app_user", indexes = {
     @Index(name = "idx_user_username", columnList = "username", unique = true)
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
     @Id

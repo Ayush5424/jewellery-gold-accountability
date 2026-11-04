@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.FluentQuery;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -209,6 +210,18 @@ public class InMemoryRepositories {
         @Override public BigDecimal sumFineWeightByType(TransactionType type) {
             return store.values().stream()
                     .filter(e -> e.getTransactionType() == type)
+                    .map(GoldLedgerEntry::getFineWeight)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        @Override public BigDecimal sumFineWeightByTypeBefore(TransactionType type, Instant cutoff) {
+            return store.values().stream()
+                    .filter(e -> e.getTransactionType() == type && e.getCreatedAt() != null && e.getCreatedAt().isBefore(cutoff))
+                    .map(GoldLedgerEntry::getFineWeight)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        @Override public BigDecimal sumFineWeightByTypeBetween(TransactionType type, Instant start, Instant end) {
+            return store.values().stream()
+                    .filter(e -> e.getTransactionType() == type && e.getCreatedAt() != null && !e.getCreatedAt().isBefore(start) && !e.getCreatedAt().isAfter(end))
                     .map(GoldLedgerEntry::getFineWeight)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
         }

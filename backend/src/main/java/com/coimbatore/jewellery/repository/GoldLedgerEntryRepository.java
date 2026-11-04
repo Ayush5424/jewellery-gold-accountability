@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,4 +29,10 @@ public interface GoldLedgerEntryRepository extends JpaRepository<GoldLedgerEntry
 
     @Query("SELECT SUM(e.fineWeight) FROM GoldLedgerEntry e WHERE e.transactionType = :type")
     BigDecimal sumFineWeightByType(@Param("type") TransactionType type);
+
+    @Query("SELECT SUM(e.fineWeight) FROM GoldLedgerEntry e WHERE e.transactionType = :type AND e.createdAt < :cutoff")
+    BigDecimal sumFineWeightByTypeBefore(@Param("type") TransactionType type, @Param("cutoff") Instant cutoff);
+
+    @Query("SELECT SUM(e.fineWeight) FROM GoldLedgerEntry e WHERE e.transactionType = :type AND e.createdAt BETWEEN :start AND :end")
+    BigDecimal sumFineWeightByTypeBetween(@Param("type") TransactionType type, @Param("start") Instant start, @Param("end") Instant end);
 }

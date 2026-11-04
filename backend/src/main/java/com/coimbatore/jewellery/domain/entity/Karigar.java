@@ -1,5 +1,6 @@
 package com.coimbatore.jewellery.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -9,6 +10,7 @@ import java.time.Instant;
     @Index(name = "idx_karigar_code", columnList = "karigar_code", unique = true),
     @Index(name = "idx_karigar_username", columnList = "username")
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Karigar {
 
     @Id

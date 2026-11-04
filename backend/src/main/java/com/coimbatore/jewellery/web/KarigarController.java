@@ -1,5 +1,6 @@
 package com.coimbatore.jewellery.web;
 
+import com.coimbatore.jewellery.common.dto.AppDto;
 import com.coimbatore.jewellery.common.exception.EntityNotFoundException;
 import com.coimbatore.jewellery.domain.entity.Karigar;
 import com.coimbatore.jewellery.domain.entity.User;
@@ -28,12 +29,15 @@ public class KarigarController {
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')")
-    public ResponseEntity<List<Karigar>> listActiveKarigars() {
-        return ResponseEntity.ok(karigarRepository.findAllByActiveTrueOrderByNameAsc());
+    public ResponseEntity<List<AppDto.KarigarResponse>> listActiveKarigars() {
+        return ResponseEntity.ok(karigarRepository.findAllByActiveTrueOrderByNameAsc()
+                .stream()
+                .map(AppDto.KarigarResponse::from)
+                .toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Karigar> getKarigarById(@PathVariable Long id, Authentication auth) {
+    public ResponseEntity<AppDto.KarigarResponse> getKarigarById(@PathVariable Long id, Authentication auth) {
         User user = userRepository.findByUsername(auth.getName()).orElseThrow();
         if (user.getRole() == UserRole.ROLE_KARIGAR) {
             if (user.getKarigar() == null || !user.getKarigar().getId().equals(id)) {
@@ -43,12 +47,12 @@ public class KarigarController {
 
         Karigar karigar = karigarRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Karigar not found: " + id));
-        return ResponseEntity.ok(karigar);
+        return ResponseEntity.ok(AppDto.KarigarResponse.from(karigar));
     }
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')")
-    public ResponseEntity<Karigar> createKarigar(@RequestBody Karigar karigar) {
+    public ResponseEntity<AppDto.KarigarResponse> createKarigar(@RequestBody Karigar karigar) {
         if (karigar.getKarigarCode() == null || karigar.getKarigarCode().isBlank()) {
             karigar.setKarigarCode(String.format("KRG-%03d", karigarRepository.count() + 1));
         }
@@ -56,6 +60,7 @@ public class KarigarController {
             karigar.setUsername(karigar.getName().toLowerCase().replaceAll("[^a-z0-9]", ""));
         }
         karigar.setActive(true);
-        return ResponseEntity.ok(karigarRepository.save(karigar));
+        Karigar saved = karigarRepository.save(karigar);
+        return ResponseEntity.ok(AppDto.KarigarResponse.from(saved));
     }
 }

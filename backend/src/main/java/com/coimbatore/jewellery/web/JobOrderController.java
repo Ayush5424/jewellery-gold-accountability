@@ -40,31 +40,43 @@ public class JobOrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<JobOrder>> listJobs(@RequestParam(required = false) JobStatus status,
-                                                   @RequestParam(required = false) Long karigarId,
-                                                   Authentication auth) {
+    public ResponseEntity<List<AppDto.JobOrderResponse>> listJobs(@RequestParam(required = false) JobStatus status,
+                                                                 @RequestParam(required = false) Long karigarId,
+                                                                 Authentication auth) {
         User user = userRepository.findByUsername(auth.getName()).orElseThrow();
         if (user.getRole() == UserRole.ROLE_KARIGAR) {
             // Karigar only sees their own jobs
             if (user.getKarigar() == null) {
                 return ResponseEntity.ok(List.of());
             }
-            return ResponseEntity.ok(jobRepository.findByKarigarIdOrderByCreatedAtDesc(user.getKarigar().getId()));
+            return ResponseEntity.ok(jobRepository.findByKarigarIdOrderByCreatedAtDesc(user.getKarigar().getId())
+                    .stream()
+                    .map(AppDto.JobOrderResponse::from)
+                    .toList());
         }
 
         if (karigarId != null) {
-            return ResponseEntity.ok(jobRepository.findByKarigarIdOrderByCreatedAtDesc(karigarId));
+            return ResponseEntity.ok(jobRepository.findByKarigarIdOrderByCreatedAtDesc(karigarId)
+                    .stream()
+                    .map(AppDto.JobOrderResponse::from)
+                    .toList());
         }
 
         if (status != null) {
-            return ResponseEntity.ok(jobRepository.findByStatusOrderByCreatedAtDesc(status));
+            return ResponseEntity.ok(jobRepository.findByStatusOrderByCreatedAtDesc(status)
+                    .stream()
+                    .map(AppDto.JobOrderResponse::from)
+                    .toList());
         }
 
-        return ResponseEntity.ok(jobRepository.findAll());
+        return ResponseEntity.ok(jobRepository.findAll()
+                .stream()
+                .map(AppDto.JobOrderResponse::from)
+                .toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<JobOrder> getJobById(@PathVariable Long id, Authentication auth) {
+    public ResponseEntity<AppDto.JobOrderResponse> getJobById(@PathVariable Long id, Authentication auth) {
         User user = userRepository.findByUsername(auth.getName()).orElseThrow();
         JobOrder job = jobRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Job not found: " + id));
@@ -75,37 +87,41 @@ public class JobOrderController {
             }
         }
 
-        return ResponseEntity.ok(job);
+        return ResponseEntity.ok(AppDto.JobOrderResponse.from(job));
     }
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')")
-    public ResponseEntity<JobOrder> createJob(@Valid @RequestBody AppDto.CreateJobRequest request) {
+    public ResponseEntity<AppDto.JobOrderResponse> createJob(@Valid @RequestBody AppDto.CreateJobRequest request) {
         Karigar karigar = karigarRepository.findById(request.karigarId())
                 .orElseThrow(() -> new EntityNotFoundException("Karigar not found: " + request.karigarId()));
 
         String jobCode = String.format("JOB-2026-%04d", jobRepository.count() + 1);
         JobOrder job = new JobOrder(jobCode, karigar, request.itemCategory(), request.description(), request.allowedWastagePercent());
-        return ResponseEntity.ok(jobRepository.save(job));
+        JobOrder saved = jobRepository.save(job);
+        return ResponseEntity.ok(AppDto.JobOrderResponse.from(saved));
     }
 
     @PostMapping("/{id}/ready-for-reconciliation")
     @PreAuthorize("hasAnyAuthority('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')")
-    public ResponseEntity<JobOrder> markReadyForReconciliation(@PathVariable Long id) {
-        return ResponseEntity.ok(reconciliationService.markReadyForReconciliation(id));
+    public ResponseEntity<AppDto.JobOrderResponse> markReadyForReconciliation(@PathVariable Long id) {
+        JobOrder job = reconciliationService.markReadyForReconciliation(id);
+        return ResponseEntity.ok(AppDto.JobOrderResponse.from(job));
     }
 
     @PostMapping("/{id}/reconcile")
     @PreAuthorize("hasAuthority('ROLE_FINANCE_HEAD')")
-    public ResponseEntity<JobOrder> finalizeReconciliation(@PathVariable Long id, Authentication auth) {
-        return ResponseEntity.ok(reconciliationService.finalizeReconciliation(id, auth.getName()));
+    public ResponseEntity<AppDto.JobOrderResponse> finalizeReconciliation(@PathVariable Long id, Authentication auth) {
+        JobOrder job = reconciliationService.finalizeReconciliation(id, auth.getName());
+        return ResponseEntity.ok(AppDto.JobOrderResponse.from(job));
     }
 
     @PostMapping("/{id}/reopen")
     @PreAuthorize("hasAuthority('ROLE_FINANCE_HEAD')")
-    public ResponseEntity<JobOrder> reopenJob(@PathVariable Long id,
-                                              @Valid @RequestBody AppDto.ReopenJobRequest request,
-                                              Authentication auth) {
-        return ResponseEntity.ok(reconciliationService.reopenReconciledJob(id, request.reason(), auth.getName()));
+    public ResponseEntity<AppDto.JobOrderResponse> reopenJob(@PathVariable Long id,
+                                                            @Valid @RequestBody AppDto.ReopenJobRequest request,
+                                                            Authentication auth) {
+        JobOrder job = reconciliationService.reopenReconciledJob(id, request.reason(), auth.getName());
+        return ResponseEntity.ok(AppDto.JobOrderResponse.from(job));
     }
 }
