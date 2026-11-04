@@ -1,10 +1,13 @@
 package com.coimbatore.jewellery.web;
 
 import com.coimbatore.jewellery.service.StockService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
@@ -29,9 +32,10 @@ public class StockController {
 
     @GetMapping("/statement")
     @PreAuthorize("hasAuthority('ROLE_FINANCE_HEAD')")
-    public ResponseEntity<Map<String, Object>> getDailyStockStatement() {
+    public ResponseEntity<Map<String, Object>> getDailyStockStatement(@RequestParam(required = false) String date) {
+        String effectiveDate = (date != null && !date.isBlank()) ? date : LocalDate.now().toString();
         Map<String, Object> summary = stockService.getLiveStockSummary();
-        summary.put("statementDate", LocalDate.now().toString());
+        summary.put("statementDate", effectiveDate);
         summary.put("companyName", "Coimbatore Fine Jewellery Ltd.");
         summary.put("operatingUnits", List.of(
                 Map.of("unit", "Central Workshop (Coimbatore)", "type", "Manufacturing", "activeKarigars", 18),
@@ -42,5 +46,15 @@ public class StockController {
                 Map.of("unit", "Peelamedu Showroom", "type", "Retail", "activeKarigars", 3)
         ));
         return ResponseEntity.ok(summary);
+    }
+
+    @GetMapping(value = "/statement/tally-export", produces = MediaType.APPLICATION_XML_VALUE)
+    @PreAuthorize("hasAuthority('ROLE_FINANCE_HEAD')")
+    public ResponseEntity<String> getTallyXmlExport(@RequestParam(required = false) String date) {
+        String effectiveDate = (date != null && !date.isBlank()) ? date : LocalDate.now().toString();
+        String tallyXml = stockService.generateTallyXmlExport(effectiveDate);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"tally-stock-journal-" + effectiveDate + ".xml\"")
+                .body(tallyXml);
     }
 }

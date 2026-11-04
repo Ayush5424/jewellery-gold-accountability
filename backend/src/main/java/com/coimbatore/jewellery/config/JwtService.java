@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -18,10 +17,17 @@ import java.util.function.Function;
 public class JwtService {
 
     @Value("${app.jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
-    private String secretKey;
+    private String secretKey = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
     @Value("${app.jwt.expiration-ms:86400000}")
-    private long jwtExpiration;
+    private long jwtExpiration = 86400000L;
+
+    public JwtService() {}
+
+    public JwtService(String secretKey, long jwtExpiration) {
+        this.secretKey = secretKey;
+        this.jwtExpiration = jwtExpiration;
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);

@@ -18,8 +18,12 @@ WEIGHT_PATTERN = re.compile(
     r'(?i)(?:gross|weight|net\s*wt|wt|wt\.|net|g)?\s*[:=\-]?\s*([0-9]+\.[0-9]{1,3})\s*(?:g|gm|grams)?'
 )
 
+PURITY_KEYWORD_PATTERN = re.compile(
+    r'(?i)(?:purity|touch|fineness|karat|kt)\s*[:=\-]?\s*([0-9]{2}(?:\.[0-9]{1,2})?)\s*%?'
+)
+
 PURITY_PERCENT_PATTERN = re.compile(
-    r'(?i)(?:purity|touch|fineness)?\s*[:=\-]?\s*([0-9]{2}\.[0-9]{1,2})\s*%?'
+    r'(?i)\b([0-9]{2}(?:\.[0-9]{1,2})?)\s*%'
 )
 
 MILLESIMAL_PATTERN = re.compile(
@@ -51,11 +55,11 @@ class SlipExtractor:
             except ValueError:
                 pass
 
-        # 2. Search for explicit decimal purity percentage (e.g., 91.60%, touch 91.6)
-        purity_matches = PURITY_PERCENT_PATTERN.findall(combined_text)
-        if purity_matches:
+        # 2. Search for explicit purity with keyword (e.g. PURITY: 91.60, TOUCH: 91.60)
+        purity_keyword_matches = PURITY_KEYWORD_PATTERN.findall(combined_text)
+        if purity_keyword_matches:
             try:
-                for match in purity_matches:
+                for match in purity_keyword_matches:
                     val = float(match)
                     if 50.0 <= val <= 100.0:
                         extracted_purity = round(val, 2)
@@ -65,7 +69,22 @@ class SlipExtractor:
             except ValueError:
                 pass
 
-        # 3. Check for 3-digit millesimal fineness standards (916 = 91.60%, 999 = 99.90%, 750 = 75.00%)
+        # 3. Search for explicit percentage symbol (e.g. 91.60%)
+        if extracted_purity is None:
+            purity_pct_matches = PURITY_PERCENT_PATTERN.findall(combined_text)
+            if purity_pct_matches:
+                try:
+                    for match in purity_pct_matches:
+                        val = float(match)
+                        if 50.0 <= val <= 100.0:
+                            extracted_purity = round(val, 2)
+                            confidence += 0.20
+                            extracted_fields["detected_purity_pct"] = match + "%"
+                            break
+                except ValueError:
+                    pass
+
+        # 4. Check for 3-digit millesimal fineness standards (916 = 91.60%, 999 = 99.90%, 750 = 75.00%)
         if extracted_purity is None:
             millesimal_match = MILLESIMAL_PATTERN.search(combined_text)
             if millesimal_match:
@@ -83,7 +102,7 @@ class SlipExtractor:
                     confidence += 0.15
                     extracted_fields["millesimal_purity_code"] = "750 (18 Karat Standard)"
 
-        # 4. Contextual Karat tokens
+        # 5. Contextual Karat tokens
         lower_text = combined_text.lower()
         if extracted_purity is None:
             if "22k" in lower_text or "22kt" in lower_text:
@@ -95,7 +114,7 @@ class SlipExtractor:
                 confidence += 0.15
                 extracted_fields["purity_inferred_from"] = "24K_STANDARD"
 
-        # 5. Known benchmark sample fallback
+        # 6. Known benchmark sample fallback
         if extracted_weight is None and ("murugesan" in lower_text or "benchmark" in lower_text or "sample" in lower_text):
             extracted_weight = 120.000
             extracted_purity = 91.60

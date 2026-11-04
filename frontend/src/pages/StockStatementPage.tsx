@@ -12,6 +12,7 @@ import {
   Flame,
   CheckCircle2,
   Calendar,
+  FileCode,
 } from 'lucide-react';
 
 interface OperatingUnit {
@@ -26,13 +27,14 @@ export const StockStatementPage: React.FC = () => {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
-  const loadData = async () => {
+  const loadData = async (dateStr?: string) => {
     setLoading(true);
     setError(null);
     try {
       const [stmtData, karigarData, jobData] = await Promise.all([
-        api.getStockStatement(),
+        api.getStockStatement(dateStr || selectedDate),
         api.getKarigars(),
         api.getJobs(),
       ]);
@@ -47,8 +49,8 @@ export const StockStatementPage: React.FC = () => {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    loadData(selectedDate);
+  }, [selectedDate]);
 
   // Compute Karigar breakdown of outstanding gold
   const karigarBalances = karigars.map((k) => {
@@ -70,17 +72,23 @@ export const StockStatementPage: React.FC = () => {
 
   const exportCSV = () => {
     if (!statement) return;
-    const dateStr = statement.statementDate || new Date().toISOString().split('T')[0];
+    const dateStr = statement.statementDate || selectedDate;
     const rows = [
       ['Coimbatore Fine Jewellery Ltd. - Daily Fine Gold Stock Statement'],
-      [`Date: ${dateStr}`],
+      [`Statement Date: ${dateStr}`],
       [''],
-      ['SUMMARY LEVEL ACCOUNTING'],
-      ['Location / Account', 'Fine Gold (g)'],
-      ['Vault Balance (Fine Gold 999 equivalent)', Number(statement.vaultFineGold || 0).toFixed(3)],
-      ['Karigar In-Hand WIP (Issued - Recovered)', Number(statement.goldWithKarigars || 0).toFixed(3)],
-      ['Refiner / Dust Recovery', Number(statement.goldAtRefiner || 0).toFixed(3)],
-      ['Total Tracked Fine Gold', Number(statement.totalTrackedFineGold || 0).toFixed(3)],
+      ['GOLD STOCK STATEMENT (FINE GOLD 999 EQUIVALENT)'],
+      ['Account / Stage', 'Fine Gold (g)'],
+      ['Opening Balance (Central Vault)', Number(statement.openingBalanceFineGold || 15000.0).toFixed(3)],
+      ['Gold Issued to Karigars (Gross to Fine)', Number(statement.totalIssuedFine || 0).toFixed(3)],
+      ['Returned Finished Jewellery', Number(statement.returnedJewelleryFine || 0).toFixed(3)],
+      ['Returned Sizing & Bench Scrap', Number(statement.returnedScrapFine || 0).toFixed(3)],
+      ['Returned Station Filings', Number(statement.returnedFilingsFine || 0).toFixed(3)],
+      ['Total Recovered into Business', Number(statement.totalRecoveredFine || 0).toFixed(3)],
+      ['Karigar In-Hand WIP Balance', Number(statement.goldWithKarigars || 0).toFixed(3)],
+      ['Refiner / Acid Dust Recovery', Number(statement.goldAtRefiner || 0).toFixed(3)],
+      ['Closing Vault Holding', Number(statement.vaultFineGold || 0).toFixed(3)],
+      ['Total Tracked Fine Gold (Vault + WIP + Refiner)', Number(statement.totalTrackedFineGold || 0).toFixed(3)],
       [''],
       ['OPERATING UNITS OVERVIEW'],
       ['Unit Name', 'Type', 'Active Karigars'],
@@ -109,44 +117,54 @@ export const StockStatementPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  const exportTallyXml = async () => {
+    try {
+      const xmlString = await api.getTallyExport(selectedDate);
+      const blob = new Blob([xmlString], { type: 'application/xml' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `tally-stock-journal-${selectedDate}.xml`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert(err.message || 'Error exporting Tally XML');
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
-
-  const currentDate = statement?.statementDate
-    ? new Date(statement.statementDate).toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      })
-    : new Date().toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
 
   return (
     <div className="space-y-6">
       {/* Header with Title and Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold tracking-tight text-slate-900">
               Daily Stock Statement
             </h1>
-            <span className="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-slate-400" />
-              {currentDate}
-            </span>
+            <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1 rounded border border-slate-200 text-xs">
+              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="bg-transparent font-mono text-slate-800 text-xs focus:outline-none"
+              />
+            </div>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Enterprise Gold Accountability Audit • Master fine gold reconciliation across 5 showrooms & workshop
+            Enterprise Gold Accountability Audit • Opening, Issue, Recovery, Closing, and Tally Export
           </p>
         </div>
 
-        <div className="flex items-center gap-2 print:hidden">
+        <div className="flex items-center gap-2 print:hidden flex-wrap">
           <button
-            onClick={loadData}
+            onClick={() => loadData(selectedDate)}
             disabled={loading}
             className="px-3 py-1.5 border border-slate-200 bg-white hover:bg-slate-50 rounded text-xs font-medium text-slate-700 flex items-center gap-1.5 shadow-sm transition-colors"
           >
@@ -160,6 +178,14 @@ export const StockStatementPage: React.FC = () => {
           >
             <Download className="w-3.5 h-3.5 text-slate-500" />
             Export CSV
+          </button>
+          <button
+            onClick={exportTallyXml}
+            disabled={!statement}
+            className="px-3 py-1.5 border border-amber-300 bg-amber-50 hover:bg-amber-100 rounded text-xs font-medium text-amber-900 flex items-center gap-1.5 shadow-sm transition-colors"
+          >
+            <FileCode className="w-3.5 h-3.5 text-amber-700" />
+            Export Tally XML
           </button>
           <button
             onClick={handlePrint}
@@ -184,12 +210,12 @@ export const StockStatementPage: React.FC = () => {
         </div>
       ) : statement ? (
         <div className="space-y-6">
-          {/* Core Question Card */}
+          {/* Core Question & Closing Balance Banner */}
           <div className="bg-gradient-to-r from-slate-900 to-slate-850 text-white rounded-lg p-5 shadow-sm border border-slate-800">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <span className="text-[11px] font-mono tracking-widest text-amber-400 uppercase font-semibold">
-                  Gold Accountability Ledger Audit
+                  Gold Accountability Ledger Audit • {selectedDate}
                 </span>
                 <h2 className="text-lg font-semibold tracking-tight text-white mt-0.5">
                   "Where is every gram of fine gold right now?"
@@ -200,7 +226,7 @@ export const StockStatementPage: React.FC = () => {
               </div>
 
               <div className="bg-slate-800/90 border border-slate-700 px-4 py-3 rounded-lg text-right shrink-0">
-                <span className="text-[11px] text-slate-400 block font-mono">TOTAL TRACKED FINE GOLD</span>
+                <span className="text-[11px] text-slate-400 block font-mono">TOTAL TRACKED CLOSING GOLD</span>
                 <span className="text-2xl font-bold font-mono tracking-tight text-amber-400">
                   <AlignedDecimal value={statement.totalTrackedFineGold} />
                 </span>
@@ -209,59 +235,91 @@ export const StockStatementPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Three Pillars Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-start gap-3">
-              <div className="p-2.5 bg-amber-50 rounded-md border border-amber-100 text-amber-700">
-                <Vault className="w-5 h-5" />
+          {/* Complete 5-Pillar Accounting Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm">
+              <p className="text-[11px] text-slate-500 font-medium">Opening Vault Fine</p>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-lg font-bold font-mono text-slate-900">
+                  <AlignedDecimal value={statement.openingBalanceFineGold || 15000.0} />
+                </span>
+                <span className="text-xs text-slate-500">g</span>
               </div>
-              <div className="flex-1">
-                <p className="text-xs text-slate-500 font-medium">Vault Balance</p>
-                <div className="mt-1 flex items-baseline gap-1">
-                  <span className="text-xl font-bold font-mono text-slate-900">
-                    <AlignedDecimal value={statement.vaultFineGold} />
-                  </span>
-                  <span className="text-xs text-slate-500">g</span>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Central safe holding (fine gold equivalent)
-                </p>
-              </div>
+              <p className="text-[10px] text-slate-400 mt-0.5">Day opening safe reserve</p>
             </div>
 
-            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-start gap-3">
-              <div className="p-2.5 bg-sky-50 rounded-md border border-sky-100 text-sky-700">
-                <Users className="w-5 h-5" />
+            <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm">
+              <p className="text-[11px] text-slate-500 font-medium">Gold Issued</p>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-lg font-bold font-mono text-slate-900">
+                  <AlignedDecimal value={statement.totalIssuedFine} />
+                </span>
+                <span className="text-xs text-slate-500">g</span>
               </div>
-              <div className="flex-1">
-                <p className="text-xs text-slate-500 font-medium">Karigar In-Hand (WIP)</p>
-                <div className="mt-1 flex items-baseline gap-1">
-                  <span className="text-xl font-bold font-mono text-slate-900">
-                    <AlignedDecimal value={statement.goldWithKarigars} />
-                  </span>
-                  <span className="text-xs text-slate-500">g</span>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Active jobs on karigar workbenches
-                </p>
-              </div>
+              <p className="text-[10px] text-slate-400 mt-0.5">Bullion to workshop</p>
             </div>
 
-            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm flex items-start gap-3">
-              <div className="p-2.5 bg-emerald-50 rounded-md border border-emerald-100 text-emerald-700">
-                <Flame className="w-5 h-5" />
+            <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm">
+              <p className="text-[11px] text-slate-500 font-medium">Gold Recovered</p>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-lg font-bold font-mono text-emerald-700">
+                  <AlignedDecimal value={statement.totalRecoveredFine} />
+                </span>
+                <span className="text-xs text-slate-500">g</span>
               </div>
-              <div className="flex-1">
-                <p className="text-xs text-slate-500 font-medium">Refiner / Recovery</p>
-                <div className="mt-1 flex items-baseline gap-1">
-                  <span className="text-xl font-bold font-mono text-slate-900">
-                    <AlignedDecimal value={statement.goldAtRefiner} />
-                  </span>
-                  <span className="text-xs text-slate-500">g</span>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Scrap and filings sent for acid refining
-                </p>
+              <p className="text-[10px] text-slate-400 mt-0.5">Jewellery + scrap + dust</p>
+            </div>
+
+            <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm">
+              <p className="text-[11px] text-slate-500 font-medium">Karigar In-Hand (WIP)</p>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-lg font-bold font-mono text-sky-700">
+                  <AlignedDecimal value={statement.goldWithKarigars} />
+                </span>
+                <span className="text-xs text-slate-500">g</span>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-0.5">Active workbench gold</p>
+            </div>
+
+            <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-sm">
+              <p className="text-[11px] text-slate-500 font-medium">Current Vault Holding</p>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-lg font-bold font-mono text-amber-700">
+                  <AlignedDecimal value={statement.vaultFineGold} />
+                </span>
+                <span className="text-xs text-slate-500">g</span>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-0.5">Closing safe physical gold</p>
+            </div>
+          </div>
+
+          {/* Recovered Gold Component Breakdown */}
+          <div className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-2">
+              <Flame className="w-4 h-4 text-amber-600" />
+              Recovery Breakdown by Component
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-3 bg-slate-50 rounded border border-slate-200">
+                <span className="text-xs text-slate-500 font-medium block">Finished Hallmarked Jewellery</span>
+                <span className="text-base font-mono font-bold text-slate-800">
+                  <AlignedDecimal value={statement.returnedJewelleryFine || 0} /> g
+                </span>
+                <span className="text-[11px] text-slate-400 block mt-0.5">BIS hallmarked stock deliveries</span>
+              </div>
+              <div className="p-3 bg-slate-50 rounded border border-slate-200">
+                <span className="text-xs text-slate-500 font-medium block">Clean Melting Scrap</span>
+                <span className="text-base font-mono font-bold text-slate-800">
+                  <AlignedDecimal value={statement.returnedScrapFine || 0} /> g
+                </span>
+                <span className="text-[11px] text-slate-400 block mt-0.5">Sizing and cut-off workshop scrap</span>
+              </div>
+              <div className="p-3 bg-slate-50 rounded border border-slate-200">
+                <span className="text-xs text-slate-500 font-medium block">Bench Filings & Recovery Dust</span>
+                <span className="text-base font-mono font-bold text-slate-800">
+                  <AlignedDecimal value={statement.returnedFilingsFine || 0} /> g
+                </span>
+                <span className="text-[11px] text-slate-400 block mt-0.5">Vacuum suction workstation filings</span>
               </div>
             </div>
           </div>

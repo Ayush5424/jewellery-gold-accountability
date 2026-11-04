@@ -89,6 +89,11 @@ export const api = {
   // Karigars
   getKarigars: () => request<Karigar[]>('/karigars'),
   getKarigarById: (id: number) => request<Karigar>(`/karigars/${id}`),
+  createKarigar: (data: Partial<Karigar>) =>
+    request<Karigar>('/karigars', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
   // Jobs
   getJobs: (status?: string, karigarId?: number) => {
@@ -171,7 +176,19 @@ export const api = {
 
   // Stock
   getStockSummary: () => request<StockSummary>('/stock/summary'),
-  getStockStatement: () => request<any>('/stock/statement'),
+  getStockStatement: (date?: string) => {
+    const query = date ? `?date=${date}` : '';
+    return request<any>(`/stock/statement${query}`);
+  },
+  getTallyExport: async (date?: string): Promise<string> => {
+    const token = getAuthToken();
+    const query = date ? `?date=${date}` : '';
+    const res = await fetch(`${API_BASE}/stock/statement/tally-export${query}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error('Failed to download Tally XML export');
+    return res.text();
+  },
 
   // AI Slip Reader
   extractSlip: async (file?: File, textHint?: string) => {

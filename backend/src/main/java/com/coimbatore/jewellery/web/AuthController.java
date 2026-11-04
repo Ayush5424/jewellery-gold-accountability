@@ -10,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
+@Transactional(readOnly = true)
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -38,7 +40,8 @@ public class AuthController {
         );
 
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
-        User user = userRepository.findByUsername(request.username()).orElseThrow();
+        User user = userRepository.findByUsername(request.username())
+                .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("User not found: " + request.username()));
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", user.getRole().name());
@@ -48,7 +51,6 @@ public class AuthController {
         }
 
         String token = jwtService.generateToken(userDetails, claims);
-
         Long karigarId = user.getKarigar() != null ? user.getKarigar().getId() : null;
 
         return ResponseEntity.ok(new AppDto.AuthResponse(

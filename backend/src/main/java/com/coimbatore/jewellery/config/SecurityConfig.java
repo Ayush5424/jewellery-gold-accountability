@@ -42,9 +42,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/error").permitAll()
-                        .requestMatchers("/api/stock/**", "/api/alerts/**", "/api/reconciliation/finalize/**").hasAuthority("ROLE_FINANCE_HEAD")
-                        .requestMatchers("/api/issue/**", "/api/receive/**", "/api/reconciliation/ready/**", "/api/ai/**").hasAnyAuthority("ROLE_ISSUE_CLERK", "ROLE_FINANCE_HEAD")
+                        .requestMatchers("/auth/**", "/api/auth/**", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/stock/**", "/api/stock/**", "/alerts/**", "/api/alerts/**").hasAuthority("ROLE_FINANCE_HEAD")
+                        .requestMatchers("/issue/**", "/api/issue/**", "/receive/**", "/api/receive/**", "/ai/**", "/api/ai/**").hasAnyAuthority("ROLE_ISSUE_CLERK", "ROLE_FINANCE_HEAD")
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
@@ -56,9 +56,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"));
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

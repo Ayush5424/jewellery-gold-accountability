@@ -24,6 +24,45 @@ class GoldAccountingCalculatorTest {
     }
 
     @Test
+    @DisplayName("Verify Part 3 Assignment Sample Calculation (120g @ 91.60% with 3% wastage)")
+    void testPart3AssignmentSampleCalculation() {
+        // Issue: 120.000g @ 91.60% -> 109.920g fine, allowed wastage: 3.00%
+        BigDecimal grossIssue = new BigDecimal("120.000");
+        BigDecimal purity = new BigDecimal("91.60");
+        BigDecimal issuedFine = GoldAccountingCalculator.calculateFineWeight(grossIssue, purity);
+        assertThat(issuedFine).isEqualByComparingTo("109.920");
+
+        BigDecimal allowedWastagePct = new BigDecimal("3.00");
+        BigDecimal allowedLoss = GoldAccountingCalculator.calculateAllowedLoss(issuedFine, allowedWastagePct);
+        // 109.920 * 3 / 100 = 3.2976 -> rounds to 3.298g
+        assertThat(allowedLoss).isEqualByComparingTo("3.298");
+
+        // Receipt 1: Jewellery 112.450g @ 91.60% -> 103.004g
+        BigDecimal r1Fine = GoldAccountingCalculator.calculateFineWeight(new BigDecimal("112.450"), purity);
+        assertThat(r1Fine).isEqualByComparingTo("103.004");
+
+        // Receipt 2: Scrap 3.300g @ 91.60% -> 3.023g
+        BigDecimal r2Fine = GoldAccountingCalculator.calculateFineWeight(new BigDecimal("3.300"), purity);
+        assertThat(r2Fine).isEqualByComparingTo("3.023");
+
+        // Total recovered fine
+        BigDecimal recoveredFine = GoldAccountingCalculator.calculateRecoveredFineWeight(r1Fine, r2Fine, BigDecimal.ZERO);
+        assertThat(recoveredFine).isEqualByComparingTo("106.027");
+
+        // Outstanding fine gold before reconciliation: 3.893g
+        BigDecimal outstanding = issuedFine.subtract(recoveredFine);
+        assertThat(outstanding).isEqualByComparingTo("3.893");
+
+        // Actual loss after reconciliation: 3.893g
+        BigDecimal actualLoss = GoldAccountingCalculator.calculateActualLoss(issuedFine, recoveredFine);
+        assertThat(actualLoss).isEqualByComparingTo("3.893");
+
+        // Excess loss: 3.893 - 3.298 = 0.595g
+        BigDecimal excessLoss = GoldAccountingCalculator.calculateExcessLoss(actualLoss, allowedLoss);
+        assertThat(excessLoss).isEqualByComparingTo("0.595");
+    }
+
+    @Test
     @DisplayName("Verify Murugesan S reference benchmark dataset exact precision")
     void testMurugesanSBenchmarkDataset() {
         // Issue

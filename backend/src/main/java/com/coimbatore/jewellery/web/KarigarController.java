@@ -47,8 +47,15 @@ public class KarigarController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ROLE_FINANCE_HEAD')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')")
     public ResponseEntity<Karigar> createKarigar(@RequestBody Karigar karigar) {
+        if (karigar.getKarigarCode() == null || karigar.getKarigarCode().isBlank()) {
+            karigar.setKarigarCode(String.format("KRG-%03d", karigarRepository.count() + 1));
+        }
+        if (karigar.getUsername() == null || karigar.getUsername().isBlank()) {
+            karigar.setUsername(karigar.getName().toLowerCase().replaceAll("[^a-z0-9]", ""));
+        }
+        karigar.setActive(true);
         return ResponseEntity.ok(karigarRepository.save(karigar));
     }
 }

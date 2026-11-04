@@ -36,17 +36,12 @@ export const KarigarMasterPage: React.FC<{ onSelectKarigar: (id: number) => void
     e.preventDefault();
     try {
       const code = newKarigar.karigarCode || `KRG-${String(karigars.length + 1).padStart(3, '0')}`;
-      await api.createJob; // placeholder check
-      await fetch('/api/karigars', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('gold_auth_token')}` },
-        body: JSON.stringify({ ...newKarigar, karigarCode: code }),
-      });
+      await api.createKarigar({ ...newKarigar, karigarCode: code });
       setShowAddModal(false);
-      setNewKarigar({ name: '', phone: '', workshopLocation: 'Central Workshop', karigarCode: '' });
+      setNewKarigar({ name: '', phone: '', workshopLocation: 'Central Workshop - Bench 1', karigarCode: '' });
       fetchKarigars();
-    } catch (err) {
-      alert('Failed to register karigar');
+    } catch (err: any) {
+      alert(err.message || 'Failed to register karigar');
     }
   };
 
@@ -65,6 +60,14 @@ export const KarigarMasterPage: React.FC<{ onSelectKarigar: (id: number) => void
           <p className="text-xs text-slate-500 mt-0.5">Assigned artisan benches, performance history, and active balance links</p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={fetchKarigars}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-amber-600' : ''}`} />
+            Refresh
+          </button>
           <button
             onClick={() => setShowAddModal(true)}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white rounded text-xs font-semibold hover:bg-slate-800"
