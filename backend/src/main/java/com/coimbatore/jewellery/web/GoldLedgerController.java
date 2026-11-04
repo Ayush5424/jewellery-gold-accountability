@@ -1,10 +1,13 @@
 package com.coimbatore.jewellery.web;
 
 import com.coimbatore.jewellery.common.dto.AppDto;
+import com.coimbatore.jewellery.common.exception.EntityNotFoundException;
 import com.coimbatore.jewellery.domain.entity.GoldLedgerEntry;
+import com.coimbatore.jewellery.domain.entity.JobOrder;
 import com.coimbatore.jewellery.domain.entity.User;
 import com.coimbatore.jewellery.domain.enums.UserRole;
 import com.coimbatore.jewellery.repository.GoldLedgerEntryRepository;
+import com.coimbatore.jewellery.repository.JobOrderRepository;
 import com.coimbatore.jewellery.repository.UserRepository;
 import com.coimbatore.jewellery.service.GoldLedgerService;
 import jakarta.validation.Valid;
@@ -23,13 +26,16 @@ public class GoldLedgerController {
     private final GoldLedgerService ledgerService;
     private final GoldLedgerEntryRepository ledgerRepository;
     private final UserRepository userRepository;
+    private final JobOrderRepository jobRepository;
 
     public GoldLedgerController(GoldLedgerService ledgerService,
                                 GoldLedgerEntryRepository ledgerRepository,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                JobOrderRepository jobRepository) {
         this.ledgerService = ledgerService;
         this.ledgerRepository = ledgerRepository;
         this.userRepository = userRepository;
+        this.jobRepository = jobRepository;
     }
 
     @PostMapping("/issue")
@@ -82,7 +88,15 @@ public class GoldLedgerController {
     }
 
     @GetMapping("/ledger/job/{jobId}")
-    public ResponseEntity<List<GoldLedgerEntry>> getLedgerByJob(@PathVariable Long jobId) {
+    public ResponseEntity<List<GoldLedgerEntry>> getLedgerByJob(@PathVariable Long jobId, Authentication auth) {
+        User user = userRepository.findByUsername(auth.getName()).orElseThrow();
+        if (user.getRole() == UserRole.ROLE_KARIGAR) {
+            JobOrder job = jobRepository.findById(jobId)
+                    .orElseThrow(() -> new EntityNotFoundException("Job not found: " + jobId));
+            if (user.getKarigar() == null || !job.getKarigar().getId().equals(user.getKarigar().getId())) {
+                throw new AccessDeniedException("Karigars can only view ledger entries of their own assigned jobs.");
+            }
+        }
         return ResponseEntity.ok(ledgerRepository.findByJobOrderIdOrderByCreatedAtAsc(jobId));
     }
 

@@ -42,9 +42,20 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/api/auth/**", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/stock/**", "/api/stock/**", "/alerts/**", "/api/alerts/**").hasAuthority("ROLE_FINANCE_HEAD")
-                        .requestMatchers("/issue/**", "/api/issue/**", "/receive/**", "/api/receive/**", "/ai/**", "/api/ai/**").hasAnyAuthority("ROLE_ISSUE_CLERK", "ROLE_FINANCE_HEAD")
+                        .requestMatchers(
+                                "/auth/login", "/api/auth/login",
+                                "/error",
+                                "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**"
+                        ).permitAll()
+                        .requestMatchers("/auth/me", "/api/auth/me").authenticated()
+                        .requestMatchers("/stock/statement/**", "/api/stock/statement/**").hasAuthority("ROLE_FINANCE_HEAD")
+                        .requestMatchers("/alerts/**", "/api/alerts/**").hasAuthority("ROLE_FINANCE_HEAD")
+                        .requestMatchers("/stock/summary", "/api/stock/summary").hasAnyAuthority("ROLE_ISSUE_CLERK", "ROLE_FINANCE_HEAD")
+                        .requestMatchers(
+                                "/issue/**", "/api/issue/**",
+                                "/receive/**", "/api/receive/**",
+                                "/ai/**", "/api/ai/**"
+                        ).hasAnyAuthority("ROLE_ISSUE_CLERK", "ROLE_FINANCE_HEAD")
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

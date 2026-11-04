@@ -9,7 +9,9 @@ import {
   AlertTriangle,
   FileSpreadsheet,
   LogOut,
+  Sparkles,
   ShieldCheck,
+  Building2,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -21,17 +23,19 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
   const { user, logout, hasRole } = useAuth();
 
+  const isKarigar = user?.role === 'ROLE_KARIGAR';
+
   const navItems = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
+      label: isKarigar ? 'Artisan Dashboard' : hasRole('ROLE_FINANCE_HEAD') ? 'Finance Dashboard' : 'Operations Dashboard',
       icon: LayoutDashboard,
       visible: true,
     },
     {
-      id: 'karigars',
-      label: 'Karigar Master',
-      icon: Users,
+      id: 'ai-extract',
+      label: 'AI Slip Scanner',
+      icon: Sparkles,
       visible: hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD'),
     },
     {
@@ -47,8 +51,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       visible: hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD'),
     },
     {
+      id: 'karigars',
+      label: 'Karigar Master',
+      icon: Users,
+      visible: hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD'),
+    },
+    {
       id: 'ledger',
-      label: 'Karigar Ledger',
+      label: isKarigar ? 'My Ledger Slips' : 'Karigar Ledger',
       icon: BookOpen,
       visible: true,
     },
@@ -69,11 +79,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'ROLE_FINANCE_HEAD':
-        return 'Finance Head';
+        return 'Finance Head (Audit Access)';
       case 'ROLE_ISSUE_CLERK':
-        return 'Issue Clerk';
+        return 'Issue Clerk (Operations)';
       case 'ROLE_KARIGAR':
-        return 'Master Karigar';
+        return 'Master Karigar (Isolated Account)';
       default:
         return role;
     }
@@ -108,7 +118,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                 <div className="h-6 w-px bg-slate-700 hidden sm:block" />
                 <button
                   onClick={logout}
-                  className="px-2.5 py-1.5 rounded text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-1.5 transition-colors"
+                  className="px-2.5 py-1.5 rounded text-slate-300 hover:text-white hover:bg-slate-800 flex items-center gap-1.5 transition-colors border border-slate-700/60"
                   title="Sign Out"
                 >
                   <LogOut className="w-3.5 h-3.5" />
@@ -149,8 +159,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
 
       {/* Minimal Enterprise Footer */}
       <footer className="border-t border-slate-200 bg-white py-3 px-6 text-xs text-slate-500 flex justify-between items-center">
-        <span>Coimbatore Central Workshop Hub • 5 Showroom Operating Network</span>
-        <span className="font-mono text-[11px]">Audit Engine v1.0.0 • All transactions ledger verified</span>
+        <span>Coimbatore Central Workshop Hub • 5 Showrooms Retail Network</span>
+        <span className="font-mono text-[11px]">Authoritative Ledger v1.0.0 • Strict BigDecimal Accounting</span>
       </footer>
     </div>
   );

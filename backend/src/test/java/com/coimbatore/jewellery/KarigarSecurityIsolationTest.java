@@ -57,7 +57,7 @@ class KarigarSecurityIsolationTest {
 
         karigarController = new KarigarController(karigarRepo, userRepo);
         jobController = new JobOrderController(jobRepo, karigarRepo, userRepo, reconciliationService);
-        ledgerController = new GoldLedgerController(ledgerService, ledgerRepo, userRepo);
+        ledgerController = new GoldLedgerController(ledgerService, ledgerRepo, userRepo, jobRepo);
 
         murugesan = karigarRepo.save(new Karigar("KRG-001", "Murugesan S", "+91 98422 10001", "Workshop", "murugesan"));
         sivakumar = karigarRepo.save(new Karigar("KRG-002", "Sivakumar P", "+91 98422 10002", "Workshop", "sivakumar"));
@@ -100,6 +100,16 @@ class KarigarSecurityIsolationTest {
         assertThatThrownBy(() -> ledgerController.getLedgerByKarigar(sivakumar.getId(), murugesanAuth))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("Karigars cannot access ledger entries of other karigars");
+    }
+
+    @Test
+    @DisplayName("Karigar cannot view peer job ledger entries by tampering job ID in URL")
+    void testKarigarJobLedgerIsolation() {
+        Authentication murugesanAuth = new UsernamePasswordAuthenticationToken("murugesan", null, Collections.emptyList());
+
+        assertThatThrownBy(() -> ledgerController.getLedgerByJob(sivaJob.getId(), murugesanAuth))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Karigars can only view ledger entries of their own assigned jobs");
     }
 
     @Test

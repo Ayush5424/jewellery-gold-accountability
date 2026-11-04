@@ -5,6 +5,7 @@ import com.coimbatore.jewellery.config.JwtService;
 import com.coimbatore.jewellery.domain.entity.User;
 import com.coimbatore.jewellery.repository.UserRepository;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -64,7 +65,11 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<AppDto.AuthResponse> getCurrentUser(Authentication auth) {
-        User user = userRepository.findByUsername(auth.getName()).orElseThrow();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        User user = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("User not found: " + auth.getName()));
         Long karigarId = user.getKarigar() != null ? user.getKarigar().getId() : null;
         return ResponseEntity.ok(new AppDto.AuthResponse(
                 null,

@@ -9,6 +9,7 @@ import { ReceiveGoldPage } from './pages/ReceiveGoldPage';
 import { KarigarLedgerPage } from './pages/KarigarLedgerPage';
 import { LossAlertsPage } from './pages/LossAlertsPage';
 import { StockStatementPage } from './pages/StockStatementPage';
+import { AiSlipExtractionPage } from './pages/AiSlipExtractionPage';
 import { RefreshCw } from 'lucide-react';
 
 const AppContent: React.FC = () => {
@@ -38,7 +39,7 @@ const AppContent: React.FC = () => {
     setActiveTab('ledger');
   };
 
-  const handleNavigateToLedger = (_jobId: number) => {
+  const handleNavigateToLedger = (_jobId?: number) => {
     setActiveTab('ledger');
   };
 
@@ -46,6 +47,11 @@ const AppContent: React.FC = () => {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardPage onNavigate={handleNavigate} />;
+      case 'ai-extract':
+        if (!hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')) {
+          return <DashboardPage onNavigate={handleNavigate} />;
+        }
+        return <AiSlipExtractionPage onNavigateToLedger={handleNavigateToLedger} />;
       case 'karigars':
         if (!hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')) {
           return <DashboardPage onNavigate={handleNavigate} />;
@@ -62,7 +68,7 @@ const AppContent: React.FC = () => {
         }
         return <ReceiveGoldPage onNavigateToLedger={handleNavigateToLedger} />;
       case 'ledger':
-        return <KarigarLedgerPage initialKarigarId={selectedKarigarId} />;
+        return <KarigarLedgerPage initialKarigarId={user.role === 'ROLE_KARIGAR' ? (user.karigarId || undefined) : (selectedKarigarId || undefined)} />;
       case 'alerts':
         if (!hasRole('ROLE_FINANCE_HEAD')) {
           return <DashboardPage onNavigate={handleNavigate} />;
