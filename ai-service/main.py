@@ -3,6 +3,20 @@ Jewellery Gold Accountability — AI Slip Extraction Microservice
 FastAPI application providing draft weight and purity reading from weighing balance slips.
 """
 
+import os
+from pathlib import Path
+
+# Automatically load environment variables from root .env if present
+try:
+    from dotenv import load_dotenv
+    root_env = Path(__file__).resolve().parent.parent / ".env"
+    if root_env.exists():
+        load_dotenv(dotenv_path=root_env)
+    else:
+        load_dotenv()
+except ImportError:
+    pass
+
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List
@@ -88,4 +102,5 @@ def extract_slip(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("AI_SERVICE_PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

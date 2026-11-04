@@ -117,4 +117,14 @@ class AuthenticationIntegrationTest {
         assertThatThrownBy(() -> authController.login(new AppDto.LoginRequest("unknown_user", "password123")))
                 .isInstanceOf(org.springframework.security.core.userdetails.UsernameNotFoundException.class);
     }
+
+    @Test
+    @DisplayName("Root .env file is discovered and loaded into System properties")
+    void testDotEnvLoading() {
+        JewelleryGoldApplication.loadDotEnv();
+        assertThat(System.getProperty("POSTGRES_DB")).isEqualTo("jewellery_gold_db");
+        assertThat(System.getProperty("POSTGRES_USER")).isEqualTo("postgres");
+        assertThat(System.getProperty("JWT_SECRET")).isNotBlank();
+        assertThat(System.getProperty("AI_SERVICE_URL")).isNotBlank();
+    }
 }
