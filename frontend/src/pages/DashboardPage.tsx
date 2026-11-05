@@ -478,12 +478,20 @@ export const DashboardPage: React.FC<{ onNavigate: (tab: string) => void }> = ({
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">
               Active Workshop Jobs ({activeJobs.length})
             </h2>
-            <button
-              onClick={() => onNavigate('issue')}
-              className="text-xs font-semibold text-amber-700 hover:text-amber-900"
-            >
-              + Issue New Job &rarr;
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onNavigate('jobs')}
+                className="text-xs font-semibold text-slate-700 hover:text-slate-900 border border-slate-300 rounded px-2.5 py-1 bg-white hover:bg-slate-50 transition-colors"
+              >
+                Manage Job Orders &rarr;
+              </button>
+              <button
+                onClick={() => onNavigate('issue')}
+                className="text-xs font-semibold text-amber-700 hover:text-amber-900 px-2 py-1"
+              >
+                + Issue Gold &rarr;
+              </button>
+            </div>
           </div>
 
           <div className="overflow-x-auto">

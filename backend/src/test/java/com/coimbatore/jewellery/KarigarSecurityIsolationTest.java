@@ -124,4 +124,47 @@ class KarigarSecurityIsolationTest {
         assertThat(karigarController.getKarigarById(sivakumar.getId(), financeAuth).getStatusCode().is2xxSuccessful()).isTrue();
         assertThat(jobController.getJobById(sivaJob.getId(), financeAuth).getStatusCode().is2xxSuccessful()).isTrue();
     }
+
+    @Test
+    @DisplayName("Create job order successfully assigns karigar, auto-resolves wastage, and generates unique job code")
+    void testCreateJobOrderSuccessfully() {
+        com.coimbatore.jewellery.common.dto.AppDto.CreateJobRequest request = new com.coimbatore.jewellery.common.dto.AppDto.CreateJobRequest(
+                murugesan.getId(),
+                ItemCategory.CHAIN,
+                "916 Hallmarked Traditional Rope Chain",
+                null
+        );
+
+        var response = jobController.createJob(request);
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        com.coimbatore.jewellery.common.dto.AppDto.JobOrderResponse body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.jobCode()).startsWith("JOB-2026-");
+        assertThat(body.karigar().getId()).isEqualTo(murugesan.getId());
+        assertThat(body.itemCategory()).isEqualTo(ItemCategory.CHAIN);
+        assertThat(body.status()).isEqualTo(com.coimbatore.jewellery.domain.enums.JobStatus.OPEN);
+        assertThat(body.allowedWastagePercent()).isNotNull();
+        assertThat(body.issuedFineWeight()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(body.outstandingFineWeight()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    @DisplayName("Create job order with custom overridden wastage allowance persists successfully")
+    void testCreateJobOrderWithCustomWastage() {
+        com.coimbatore.jewellery.common.dto.AppDto.CreateJobRequest request = new com.coimbatore.jewellery.common.dto.AppDto.CreateJobRequest(
+                sivakumar.getId(),
+                ItemCategory.TEMPLE_JEWELLERY,
+                "Antique Nakshi Deity Choker",
+                new BigDecimal("2.50"),
+                "Intricate antique nakshi hand carving requiring higher cutting allowance"
+        );
+
+        var response = jobController.createJob(request);
+        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+        com.coimbatore.jewellery.common.dto.AppDto.JobOrderResponse body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.karigar().getId()).isEqualTo(sivakumar.getId());
+        assertThat(body.itemCategory()).isEqualTo(ItemCategory.TEMPLE_JEWELLERY);
+        assertThat(body.allowedWastagePercent()).isEqualByComparingTo(new BigDecimal("2.50"));
+    }
 }

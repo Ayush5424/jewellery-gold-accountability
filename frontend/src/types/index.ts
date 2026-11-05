@@ -50,6 +50,14 @@ export interface JobOrder {
   createdAt: string;
 }
 
+export interface CreateJobRequest {
+  karigarId: number;
+  itemCategory: ItemCategory;
+  description: string;
+  allowedWastagePercent?: number;
+  overrideReason?: string;
+}
+
 export interface GoldLedgerEntry {
   id: number;
   voucherNumber: string;

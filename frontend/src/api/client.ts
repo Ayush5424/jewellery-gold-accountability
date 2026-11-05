@@ -1,4 +1,4 @@
-import { AuthUser, Karigar, JobOrder, GoldLedgerEntry, LossAlert, StockSummary, KarigarWastageAllowance } from '../types';
+import { AuthUser, Karigar, JobOrder, GoldLedgerEntry, LossAlert, StockSummary, KarigarWastageAllowance, CreateJobRequest } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -111,7 +111,7 @@ export const api = {
     return request<JobOrder[]>(`/jobs${query}`);
   },
   getJobById: (id: number) => request<JobOrder>(`/jobs/${id}`),
-  createJob: (data: any) =>
+  createJob: (data: CreateJobRequest) =>
     request<JobOrder>('/jobs', {
       method: 'POST',
       body: JSON.stringify(data),

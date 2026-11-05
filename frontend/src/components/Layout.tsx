@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import {
   LayoutDashboard,
+  Briefcase,
   Users,
   ArrowUpRight,
   ArrowDownLeft,
@@ -37,6 +38,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
       id: 'ai-extract',
       label: 'AI Slip Scanner',
       icon: Sparkles,
+      visible: hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD'),
+    },
+    {
+      id: 'jobs',
+      label: 'Job Orders',
+      icon: Briefcase,
       visible: hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD'),
     },
     {

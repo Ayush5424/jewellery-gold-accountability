@@ -106,7 +106,12 @@ public class JobOrderController {
             effectiveWastage = karigarWastageService.resolveWastagePercent(karigar.getId(), request.itemCategory());
         }
 
-        String jobCode = String.format("JOB-2026-%04d", jobRepository.count() + 1);
+        long nextNum = jobRepository.count() + 1;
+        String jobCode = String.format("JOB-2026-%03d", nextNum);
+        while (jobRepository.findByJobCode(jobCode).isPresent()) {
+            nextNum++;
+            jobCode = String.format("JOB-2026-%03d", nextNum);
+        }
         JobOrder job = new JobOrder(jobCode, karigar, request.itemCategory(), request.description(), effectiveWastage);
         JobOrder saved = jobRepository.save(job);
         return ResponseEntity.ok(AppDto.JobOrderResponse.from(saved));

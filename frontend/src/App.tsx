@@ -11,12 +11,14 @@ import { KarigarLedgerPage } from './pages/KarigarLedgerPage';
 import { LossAlertsPage } from './pages/LossAlertsPage';
 import { StockStatementPage } from './pages/StockStatementPage';
 import { AiSlipExtractionPage } from './pages/AiSlipExtractionPage';
+import { JobOrdersPage } from './pages/JobOrdersPage';
 import { RefreshCw } from 'lucide-react';
 
 const AppContent: React.FC = () => {
   const { user, loading, hasRole } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [selectedKarigarId, setSelectedKarigarId] = useState<number | null>(null);
+  const [selectedJobIdForIssue, setSelectedJobIdForIssue] = useState<number | null>(null);
 
   if (loading) {
     return (
@@ -53,16 +55,34 @@ const AppContent: React.FC = () => {
           return <DashboardPage onNavigate={handleNavigate} />;
         }
         return <AiSlipExtractionPage onNavigateToLedger={handleNavigateToLedger} />;
+      case 'jobs':
+        if (!hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')) {
+          return <DashboardPage onNavigate={handleNavigate} />;
+        }
+        return (
+          <JobOrdersPage
+            onNavigateToIssue={(jobId) => {
+              setSelectedJobIdForIssue(jobId);
+              setActiveTab('issue');
+            }}
+            onNavigateToLedger={handleNavigateToLedger}
+          />
+        );
+      case 'issue':
+        if (!hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')) {
+          return <DashboardPage onNavigate={handleNavigate} />;
+        }
+        return (
+          <IssueGoldPage
+            onNavigateToLedger={handleNavigateToLedger}
+            initialJobId={selectedJobIdForIssue}
+          />
+        );
       case 'karigars':
         if (!hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')) {
           return <DashboardPage onNavigate={handleNavigate} />;
         }
         return <KarigarMasterPage onSelectKarigar={handleSelectKarigar} />;
-      case 'issue':
-        if (!hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')) {
-          return <DashboardPage onNavigate={handleNavigate} />;
-        }
-        return <IssueGoldPage onNavigateToLedger={handleNavigateToLedger} />;
       case 'receive':
         if (!hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD')) {
           return <DashboardPage onNavigate={handleNavigate} />;
