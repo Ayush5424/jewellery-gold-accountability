@@ -4,11 +4,15 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
@@ -16,8 +20,10 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    @Value("${app.jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
-    private String secretKey = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    private static final Logger log = LoggerFactory.getLogger(JwtService.class);
+
+    @Value("${app.jwt.secret:}")
+    private String secretKey;
 
     @Value("${app.jwt.expiration-ms:86400000}")
     private long jwtExpiration = 86400000L;
@@ -27,6 +33,24 @@ public class JwtService {
     public JwtService(String secretKey, long jwtExpiration) {
         this.secretKey = secretKey;
         this.jwtExpiration = jwtExpiration;
+    }
+
+    @PostConstruct
+    public void validateConfiguration() {
+        if (secretKey == null || secretKey.trim().isEmpty()) {
+            throw new IllegalStateException(
+                "CRITICAL SECURITY CONFIGURATION ERROR: JWT_SECRET environment variable is missing or empty. " +
+                "Please configure a secure 256-bit secret in your root .env file or system environment."
+            );
+        }
+        byte[] keyBytes = resolveKeyBytes(secretKey.trim());
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException(
+                "CRITICAL SECURITY CONFIGURATION ERROR: JWT_SECRET must be at least 256 bits (32 bytes). Current length: " +
+                (keyBytes.length * 8) + " bits."
+            );
+        }
+        log.info("JWT service successfully validated with a {}-bit signing key.", keyBytes.length * 8);
     }
 
     public String extractUsername(String token) {
@@ -69,8 +93,28 @@ public class JwtService {
                 .getPayload();
     }
 
+    private byte[] resolveKeyBytes(String secret) {
+        if (secret == null || secret.isEmpty()) {
+            throw new IllegalStateException(
+                "JWT signing key is not configured. Please define JWT_SECRET in your .env file or environment."
+            );
+        }
+        try {
+            byte[] decoded = Decoders.BASE64.decode(secret);
+            if (decoded != null && decoded.length >= 32) {
+                return decoded;
+            }
+        } catch (Exception ignored) {
+            // Not a valid Base64 string; treat as raw UTF-8 string
+        }
+        return secret.getBytes(StandardCharsets.UTF_8);
+    }
+
     private SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = resolveKeyBytes(secretKey != null ? secretKey.trim() : "");
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException("JWT signing key must be at least 256 bits (32 bytes).");
+        }
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

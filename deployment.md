@@ -57,41 +57,44 @@ Ensure the following runtimes and tools are installed on the deployment host:
 
 ## 4. Environment Variables & Configuration
 
-### Environment Variables
-Configure the following environment variables on your system or in your deployment profile:
+All runtime secrets and service endpoints are centralized in environment variables. A template file [`.env.example`](.env.example) is provided at the repository root.
 
-```env
-# Database Credentials
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/jewellery_gold_db
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=your_secure_password_here
-
-# JWT Security
-JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-JWT_EXPIRATION_MS=86400000
-
-# AI Microservice URL (Backend -> AI Service)
-AI_SERVICE_URL=http://localhost:8000
-
-# Server Context Path & Port
-SERVER_PORT=8080
-```
-
-### Backend `application.properties` (Local Development in IntelliJ IDEA)
-For developers running Spring Boot directly inside IntelliJ IDEA:
-1. Open `backend/src/main/resources/application.properties`.
-2. Confirm the content references the environment variable securely:
-   ```properties
-   spring.datasource.url=jdbc:postgresql://localhost:5432/jewellery_gold_db
-   spring.datasource.username=postgres
-   spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:}
-   spring.datasource.driver-class-name=org.postgresql.Driver
+### Step-by-Step Configuration:
+1. Copy the template to `.env`:
+   ```bash
+   cp .env.example .env
    ```
-3. In IntelliJ IDEA:
-   - Navigate to **Run** -> **Edit Configurations...**
-   - Select the Spring Boot Run Configuration for `JewelleryGoldApplication`.
-   - Under **Environment variables**, set: `SPRING_DATASOURCE_PASSWORD=your_actual_password`.
-   - Click **Apply** and **Run**.
+2. Configure your local PostgreSQL password:
+   ```env
+   POSTGRES_PASSWORD=your_actual_postgres_password
+   ```
+3. Generate a cryptographically secure 256-bit JWT secret and assign to `JWT_SECRET`:
+   ```bash
+   # Linux / macOS / Git Bash:
+   openssl rand -base64 32
+
+   # Windows PowerShell:
+   $b = New-Object byte[] 32; [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)
+   ```
+   Paste the generated value into `.env`:
+   ```env
+   JWT_SECRET=your_generated_256_bit_secret
+   ```
+   > [!NOTE]
+   > The Spring Boot backend strictly enforces that `JWT_SECRET` is defined and has a length of at least 256 bits (32 bytes). Startup fails safely with an explicit configuration error if this is missing.
+
+4. Choose your evaluation account demo passwords:
+   ```env
+   DEMO_FINANCE_PASSWORD=choose_finance_head_password
+   DEMO_CLERK_PASSWORD=choose_issue_clerk_password
+   DEMO_KARIGAR_PASSWORD=choose_karigar_password
+   ```
+   On first application startup, `DataInitializer` creates the evaluation accounts with BCrypt-hashed passwords derived from these variables. If the accounts already exist, existing hashes remain untouched.
+
+### Automatic Environment Discovery:
+* **Spring Boot Backend**: Automatically locates and parses `.env` on boot via `JewelleryGoldApplication.loadDotEnv()`. Running via Maven (`mvn spring-boot:run`) or IntelliJ IDEA seamlessly picks up these variables without manual IDE property configurations.
+* **AI Vision Microservice**: Automatically loads `.env` via `python-dotenv` on launch.
+* **Frontend Web App**: Vite reads `.env` via `envDir: '../'`, exposing `VITE_*` variables to the client and keeping backend credentials strictly private.
 
 ---
 
@@ -149,10 +152,15 @@ Get-Service -Name postgresql* | Start-Service
    ```bash
    mvn clean test
    ```
-   *(Verify all 27 unit, integration, and security isolation tests pass)*.
+   *(Verify all 43 unit, integration, and security isolation tests pass)*.
 3. Start the Spring Boot application:
    ```bash
-   mvn spring-boot:run
+   # Windows (PowerShell / Command Prompt):
+   .\mvnw.cmd spring-boot:run
+
+   # Linux / macOS:
+   ./mvnw spring-boot:run
+   # (Or using system Maven: mvn spring-boot:run)
    ```
    *Backend Base URL*: `http://localhost:8080/api`
    *Swagger / API docs*: `http://localhost:8080/api/swagger-ui.html`
@@ -174,7 +182,7 @@ Get-Service -Name postgresql* | Start-Service
    ```bash
    npm run dev
    ```
-   *Frontend URL*: `http://localhost:5173` (or `http://localhost:3000` when port is mapped).
+   *Frontend URL*: `http://localhost:3000` (configured via `frontend/vite.config.ts`).
 
 ---
 
@@ -258,14 +266,14 @@ curl -i http://localhost:8000/health
 cd backend
 mvn test
 ```
-*Expected Result*: 27 passed, 0 failures, 0 errors.
+*Expected Result*: 43 passed, 0 failures, 0 errors.
 
 ### 5. Running AI Service Pytest Suite
 ```bash
 cd ai-service
 python -m pytest tests/
 ```
-*Expected Result*: 8 passed in ~0.4s.
+*Expected Result*: 11 passed in ~0.5s.
 
 ---
 

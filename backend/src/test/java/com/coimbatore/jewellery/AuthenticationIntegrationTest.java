@@ -30,6 +30,7 @@ class AuthenticationIntegrationTest {
     private static final String TEST_FINANCE_PWD = "TestFinancePassword@2026";
     private static final String TEST_CLERK_PWD = "TestClerkPassword@2026";
     private static final String TEST_KARIGAR_PWD = "TestKarigarPassword@2026";
+    private static final String TEST_JWT_SECRET = "dGVzdE9ubHlKd3RTZWNyZXRLZXlGb3JVbml0VGVzdHNNdXN0QmVBdExlYXN0MjU2Qml0c0xvbmch";
 
     private InMemoryUserRepository userRepo;
     private InMemoryKarigarRepository karigarRepo;
@@ -43,7 +44,8 @@ class AuthenticationIntegrationTest {
         userRepo = new InMemoryUserRepository();
         karigarRepo = new InMemoryKarigarRepository();
         passwordEncoder = new BCryptPasswordEncoder();
-        jwtService = new JwtService();
+        jwtService = new JwtService(TEST_JWT_SECRET, 86400000L);
+        jwtService.validateConfiguration();
         userDetailsService = new UserDetailsServiceImpl(userRepo);
 
         AuthenticationManager authenticationManager = authentication -> {
@@ -141,5 +143,43 @@ class AuthenticationIntegrationTest {
     void testDotEnvLoading() {
         JewelleryGoldApplication.loadDotEnv();
         assertThat(System.getProperty("POSTGRES_DB")).isEqualTo("jewellery_gold_db");
+    }
+
+    @Test
+    @DisplayName("JwtService throws IllegalStateException when secret is missing or blank")
+    void testJwtServiceRejectsMissingSecret() {
+        JwtService emptySecretService = new JwtService("", 86400000L);
+        assertThatThrownBy(emptySecretService::validateConfiguration)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("JWT_SECRET");
+
+        JwtService nullSecretService = new JwtService(null, 86400000L);
+        assertThatThrownBy(nullSecretService::validateConfiguration)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("JWT_SECRET");
+    }
+
+    @Test
+    @DisplayName("JwtService throws IllegalStateException when secret key length is less than 256 bits (32 bytes)")
+    void testJwtServiceRejectsSub256BitSecret() {
+        // 16-byte short key
+        JwtService shortKeyService = new JwtService("short-secret-key", 86400000L);
+        assertThatThrownBy(shortKeyService::validateConfiguration)
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("at least 256 bits");
+    }
+
+    @Test
+    @DisplayName("JwtService accepts valid 256-bit secret and correctly generates/validates tokens")
+    void testJwtServiceAcceptsValidSecret() {
+        JwtService validService = new JwtService(TEST_JWT_SECRET, 86400000L);
+        validService.validateConfiguration();
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername("finance_head");
+        String token = validService.generateToken(userDetails, java.util.Map.of("role", "ROLE_FINANCE_HEAD"));
+
+        assertThat(token).isNotBlank();
+        assertThat(validService.isTokenValid(token, userDetails)).isTrue();
+        assertThat(validService.extractUsername(token)).isEqualTo("finance_head");
     }
 }

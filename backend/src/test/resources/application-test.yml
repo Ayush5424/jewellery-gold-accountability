@@ -11,7 +11,7 @@ spring:
 
 app:
   jwt:
-    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    secret: ${JWT_SECRET:dGVzdE9ubHlKd3RTZWNyZXRLZXlGb3JVbml0VGVzdHNNdXN0QmVBdExlYXN0MjU2Qml0c0xvbmch}
     expiration-ms: 86400000
   ai-service:
     url: http://localhost:8000
