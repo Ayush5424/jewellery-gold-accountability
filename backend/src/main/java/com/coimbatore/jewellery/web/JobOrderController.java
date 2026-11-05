@@ -11,6 +11,7 @@ import com.coimbatore.jewellery.repository.JobOrderRepository;
 import com.coimbatore.jewellery.repository.KarigarRepository;
 import com.coimbatore.jewellery.repository.UserRepository;
 import com.coimbatore.jewellery.service.JobReconciliationService;
+import com.coimbatore.jewellery.service.KarigarWastageService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -18,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -28,15 +30,18 @@ public class JobOrderController {
     private final KarigarRepository karigarRepository;
     private final UserRepository userRepository;
     private final JobReconciliationService reconciliationService;
+    private final KarigarWastageService karigarWastageService;
 
     public JobOrderController(JobOrderRepository jobRepository,
                               KarigarRepository karigarRepository,
                               UserRepository userRepository,
-                              JobReconciliationService reconciliationService) {
+                              JobReconciliationService reconciliationService,
+                              KarigarWastageService karigarWastageService) {
         this.jobRepository = jobRepository;
         this.karigarRepository = karigarRepository;
         this.userRepository = userRepository;
         this.reconciliationService = reconciliationService;
+        this.karigarWastageService = karigarWastageService;
     }
 
     @GetMapping
@@ -96,8 +101,13 @@ public class JobOrderController {
         Karigar karigar = karigarRepository.findById(request.karigarId())
                 .orElseThrow(() -> new EntityNotFoundException("Karigar not found: " + request.karigarId()));
 
+        BigDecimal effectiveWastage = request.allowedWastagePercent();
+        if (effectiveWastage == null) {
+            effectiveWastage = karigarWastageService.resolveWastagePercent(karigar.getId(), request.itemCategory());
+        }
+
         String jobCode = String.format("JOB-2026-%04d", jobRepository.count() + 1);
-        JobOrder job = new JobOrder(jobCode, karigar, request.itemCategory(), request.description(), request.allowedWastagePercent());
+        JobOrder job = new JobOrder(jobCode, karigar, request.itemCategory(), request.description(), effectiveWastage);
         JobOrder saved = jobRepository.save(job);
         return ResponseEntity.ok(AppDto.JobOrderResponse.from(saved));
     }

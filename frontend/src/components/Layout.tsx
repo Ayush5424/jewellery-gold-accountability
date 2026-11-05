@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import {
   LayoutDashboard,
   Users,
@@ -10,8 +11,7 @@ import {
   FileSpreadsheet,
   LogOut,
   Sparkles,
-  ShieldCheck,
-  Building2,
+  Globe,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -22,13 +22,14 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
   const { user, logout, hasRole } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
 
   const isKarigar = user?.role === 'ROLE_KARIGAR';
 
   const navItems = [
     {
       id: 'dashboard',
-      label: isKarigar ? 'Artisan Dashboard' : hasRole('ROLE_FINANCE_HEAD') ? 'Finance Dashboard' : 'Operations Dashboard',
+      label: isKarigar ? t('nav.dashboard') : hasRole('ROLE_FINANCE_HEAD') ? 'Finance Dashboard' : 'Operations Dashboard',
       icon: LayoutDashboard,
       visible: true,
     },
@@ -40,31 +41,31 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
     },
     {
       id: 'issue',
-      label: 'Issue Gold',
+      label: t('nav.issue'),
       icon: ArrowUpRight,
       visible: hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD'),
     },
     {
       id: 'receive',
-      label: 'Receive Gold',
+      label: t('nav.receive'),
       icon: ArrowDownLeft,
       visible: hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD'),
     },
     {
       id: 'karigars',
-      label: 'Karigar Master',
+      label: t('nav.karigars'),
       icon: Users,
       visible: hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD'),
     },
     {
       id: 'ledger',
-      label: isKarigar ? 'My Ledger Slips' : 'Karigar Ledger',
+      label: isKarigar ? t('nav.ledger') : 'Karigar Ledger',
       icon: BookOpen,
       visible: true,
     },
     {
       id: 'alerts',
-      label: 'Loss Alerts',
+      label: t('nav.alerts'),
       icon: AlertTriangle,
       visible: hasRole('ROLE_FINANCE_HEAD'),
     },
@@ -79,14 +80,18 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'ROLE_FINANCE_HEAD':
-        return 'Finance Head (Audit Access)';
+        return 'Finance Head (Authoritative Reconciliation)';
       case 'ROLE_ISSUE_CLERK':
-        return 'Issue Clerk (Operations)';
+        return 'Issue Clerk (Gold Custody)';
       case 'ROLE_KARIGAR':
-        return 'Master Karigar (Isolated Account)';
+        return 'Master Karigar (Bench Isolation)';
       default:
         return role;
     }
+  };
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'ta' : 'en');
   };
 
   return (
@@ -108,7 +113,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-3 text-xs">
+            {/* Language Toggle */}
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+              title="Toggle English / தமிழ்"
+            >
+              <Globe className="w-3.5 h-3.5 text-amber-400" />
+              <span className="font-medium">{language === 'en' ? 'தமிழ்' : 'English'}</span>
+            </button>
+
             {user && (
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
@@ -122,7 +137,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
                   title="Sign Out"
                 >
                   <LogOut className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Logout</span>
+                  <span className="hidden sm:inline">{t('nav.logout')}</span>
                 </button>
               </div>
             )}

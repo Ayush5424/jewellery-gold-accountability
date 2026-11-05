@@ -5,6 +5,7 @@ import com.coimbatore.jewellery.domain.entity.Karigar;
 import com.coimbatore.jewellery.domain.entity.User;
 import com.coimbatore.jewellery.domain.enums.ItemCategory;
 import com.coimbatore.jewellery.domain.enums.UserRole;
+import com.coimbatore.jewellery.service.KarigarWastageService;
 import com.coimbatore.jewellery.service.GoldLedgerService;
 import com.coimbatore.jewellery.service.JobReconciliationService;
 import com.coimbatore.jewellery.service.VoucherGeneratorService;
@@ -54,9 +55,11 @@ class KarigarSecurityIsolationTest {
         VoucherGeneratorService voucherGenerator = new VoucherGeneratorService();
         GoldLedgerService ledgerService = new GoldLedgerService(ledgerRepo, jobRepo, karigarRepo, voucherGenerator);
         JobReconciliationService reconciliationService = new JobReconciliationService(jobRepo, karigarRepo, alertRepo, ledgerService);
+        InMemoryKarigarWastageAllowanceRepository allowanceRepo = new InMemoryKarigarWastageAllowanceRepository();
+        KarigarWastageService wastageService = new KarigarWastageService(allowanceRepo, karigarRepo);
 
-        karigarController = new KarigarController(karigarRepo, userRepo);
-        jobController = new JobOrderController(jobRepo, karigarRepo, userRepo, reconciliationService);
+        karigarController = new KarigarController(karigarRepo, userRepo, wastageService);
+        jobController = new JobOrderController(jobRepo, karigarRepo, userRepo, reconciliationService, wastageService);
         ledgerController = new GoldLedgerController(ledgerService, ledgerRepo, userRepo, jobRepo);
 
         murugesan = karigarRepo.save(new Karigar("KRG-001", "Murugesan S", "+91 98422 10001", "Workshop", "murugesan"));

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api/client';
 import { Karigar, JobOrder, GoldLedgerEntry } from '../types';
 import { AlignedDecimal } from '../components/AlignedDecimal';
@@ -15,10 +16,12 @@ import {
   Scale,
   Hammer,
   Sparkles,
+  Globe,
 } from 'lucide-react';
 
 export const KarigarDashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const [profile, setProfile] = useState<Karigar | null>(null);
   const [jobs, setJobs] = useState<JobOrder[]>([]);
   const [ledgerEntries, setLedgerEntries] = useState<GoldLedgerEntry[]>([]);
@@ -78,93 +81,126 @@ export const KarigarDashboardPage: React.FC = () => {
     .reduce((sum, e) => sum + e.fineWeight, 0);
 
   const totalReturnedFine = ledgerEntries
-    .filter(e => e.transactionType === 'RECEIPT_JEWELLERY' || e.transactionType === 'RECEIPT_SCRAP' || e.transactionType === 'RECEIPT_FILINGS')
+    .filter(e => e.transactionType !== 'ISSUE' && e.transactionType !== 'ADJUSTMENT_REVERSAL')
     .reduce((sum, e) => sum + e.fineWeight, 0);
 
-  const netOutstandingFine = Math.max(0, totalIssuedFine - totalReturnedFine);
-  const activeJobs = jobs.filter(j => j.status === 'IN_PROGRESS' || j.status === 'OPEN');
+  const currentOutstandingFine = totalIssuedFine - totalReturnedFine;
+
+  const activeJobs = jobs.filter(j => j.status === 'IN_PROGRESS' || j.status === 'OPEN' || j.status === 'READY_FOR_RECONCILIATION');
   const reconciledJobs = jobs.filter(j => j.status === 'RECONCILED');
 
   return (
     <div className="space-y-6">
-      {/* Artisan Profile Identity Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="h-12 w-12 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center font-bold text-lg font-mono">
-            {profile?.karigarCode || 'KRG'}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold text-slate-100">{profile?.name || user?.fullName}</h1>
-              <span className="text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded">
-                Master Artisan
-              </span>
+      {/* Header Profile Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-800 rounded-lg p-5 text-white shadow-md border border-slate-700/60">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 font-bold text-lg">
+              {profile?.name?.substring(0, 2).toUpperCase() || 'MK'}
             </div>
-            <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
-              <span>{profile?.workshopLocation || 'Coimbatore Main Workshop'}</span>
-              <span>•</span>
-              <span className="font-mono text-slate-300">{profile?.phone}</span>
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold tracking-tight text-slate-100">
+                  {profile?.name || user?.fullName}
+                </h1>
+                <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                  {profile?.karigarCode || 'KRG-001'}
+                </span>
+                <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
+                  <Shield className="w-3 h-3" />
+                  {language === 'ta' ? 'தனிப்பட்ட பட்டறை பார்வை' : 'Isolated Artisan Access'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                <span>{t('dashboard.bench')}: <strong className="text-slate-300">{profile?.workshopLocation}</strong></span>
+                <span>•</span>
+                <span>{t('dashboard.phone')}: <strong className="text-slate-300">{profile?.phone}</strong></span>
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Tenant Isolation Badge */}
-        <div className="flex items-center gap-2 text-xs bg-slate-800/80 border border-slate-700/80 px-3.5 py-2 rounded-lg">
-          <Shield className="w-4 h-4 text-emerald-400" />
-          <div>
-            <p className="font-medium text-slate-200">Karigar Isolated Session</p>
-            <p className="text-[10px] text-slate-400 font-mono">Authorized to view personal jobs & slips only</p>
+          <div className="flex items-center gap-2">
+            {/* Direct Language Switcher */}
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'ta' : 'en')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 text-xs font-medium transition-colors"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>{language === 'en' ? 'தமிழ் இடைமுகம்' : 'English Interface'}</span>
+            </button>
+            <button
+              onClick={fetchKarigarData}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-medium transition-colors"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>{t('dashboard.refresh')}</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* KPI Stat Cards */}
+      {/* KPI Balance Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Outstanding Gold */}
-        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
-          <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Current Outstanding Working Gold</p>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-2xl font-bold font-mono text-amber-700">
-              <AlignedDecimal value={netOutstandingFine} />
-            </span>
-            <span className="text-xs font-mono text-slate-500">grams fine</span>
+        {/* Outstanding Pure Gold In-Hand */}
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs relative overflow-hidden">
+          <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>{t('dashboard.pureGoldBalance')}</span>
+            <Scale className="w-4 h-4 text-amber-600" />
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Fine gold currently on artisan bench</p>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className={`text-2xl font-bold font-mono tracking-tight ${
+              currentOutstandingFine > 0 ? 'text-amber-600' : 'text-slate-900'
+            }`}>
+              <AlignedDecimal value={currentOutstandingFine} />
+            </span>
+            <span className="text-xs font-mono font-medium text-slate-500">g fine</span>
+          </div>
+          <p className="text-[11px] text-slate-400 mt-1">24kt pure gold custodian liability</p>
+          <div className="absolute top-0 right-0 w-16 h-16 bg-amber-50 rounded-full -mr-8 -mt-8 pointer-events-none" />
         </div>
 
-        {/* Total Gold Issued */}
-        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-          <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Total Gold Issued</p>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-xl font-bold font-mono text-slate-800">
+        {/* Total Issued */}
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>{t('dashboard.totalIssued')}</span>
+            <Clock className="w-4 h-4 text-slate-400" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold font-mono text-slate-900 tracking-tight">
               <AlignedDecimal value={totalIssuedFine} />
             </span>
-            <span className="text-xs font-mono text-slate-500">grams fine</span>
+            <span className="text-xs font-mono font-medium text-slate-500">g fine</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Cumulative raw bullion received</p>
+          <p className="text-[11px] text-slate-400 mt-1">Cumulative bullion & bars assigned</p>
         </div>
 
-        {/* Total Gold Returned */}
-        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-          <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Total Gold Returned</p>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-xl font-bold font-mono text-emerald-700">
+        {/* Total Returned */}
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>{t('dashboard.totalDelivered')}</span>
+            <CheckCircle className="w-4 h-4 text-emerald-600" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold font-mono text-emerald-700 tracking-tight">
               <AlignedDecimal value={totalReturnedFine} />
             </span>
-            <span className="text-xs font-mono text-slate-500">grams fine</span>
+            <span className="text-xs font-mono font-medium text-slate-500">g fine</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Jewellery, clean scrap & bench dust</p>
+          <p className="text-[11px] text-slate-400 mt-1">Jewellery, scrap & filings accounted</p>
         </div>
 
-        {/* Work Orders Status */}
-        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-          <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Assigned Job Orders</p>
+        {/* Active vs Reconciled Jobs */}
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>{t('dashboard.activeJobs')}</span>
+            <Hammer className="w-4 h-4 text-slate-400" />
+          </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-xl font-bold font-mono text-slate-800">{activeJobs.length}</span>
-            <span className="text-xs text-amber-700 font-medium">active</span>
+            <span className="text-xs text-amber-700 font-medium">{language === 'ta' ? 'செயலில்' : 'active'}</span>
             <span className="text-slate-300">/</span>
             <span className="text-sm font-mono text-slate-600">{reconciledJobs.length}</span>
-            <span className="text-xs text-slate-500">reconciled</span>
+            <span className="text-xs text-slate-500">{language === 'ta' ? 'முடிந்தது' : 'reconciled'}</span>
           </div>
           <p className="text-[11px] text-slate-400 mt-1">Total {jobs.length} jobs assigned</p>
         </div>
@@ -175,7 +211,7 @@ export const KarigarDashboardPage: React.FC = () => {
         <div className="p-4 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Hammer className="w-4 h-4 text-amber-600" />
-            <h2 className="text-sm font-bold text-slate-800">Assigned Job Orders</h2>
+            <h2 className="text-sm font-bold text-slate-800">{t('dashboard.myJobs')}</h2>
           </div>
           <span className="text-xs font-mono text-slate-500">Showing {jobs.length} jobs</span>
         </div>
@@ -184,21 +220,21 @@ export const KarigarDashboardPage: React.FC = () => {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold">
-                <th className="py-2.5 px-4 font-mono">Job Code</th>
-                <th className="py-2.5 px-4">Item Category</th>
-                <th className="py-2.5 px-4">Description</th>
-                <th className="py-2.5 px-4 text-right">Allowed Wastage</th>
-                <th className="py-2.5 px-4 text-right">Issued Fine</th>
-                <th className="py-2.5 px-4 text-right">Recovered Fine</th>
+                <th className="py-2.5 px-4 font-mono">{t('table.job')}</th>
+                <th className="py-2.5 px-4">{t('table.category')}</th>
+                <th className="py-2.5 px-4">{t('table.description')}</th>
+                <th className="py-2.5 px-4 text-right">{t('dashboard.allowedWastage')}</th>
+                <th className="py-2.5 px-4 text-right">{t('dashboard.totalIssued')}</th>
+                <th className="py-2.5 px-4 text-right">{t('dashboard.totalDelivered')}</th>
                 <th className="py-2.5 px-4 text-right">Outstanding</th>
-                <th className="py-2.5 px-4 text-center">Status</th>
+                <th className="py-2.5 px-4 text-center">{t('table.status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {jobs.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-8 text-center text-slate-400">
-                    No job orders currently assigned.
+                    {t('dashboard.emptyJobs')}
                   </td>
                 </tr>
               ) : (
@@ -237,7 +273,7 @@ export const KarigarDashboardPage: React.FC = () => {
         <div className="p-4 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-amber-600" />
-            <h2 className="text-sm font-bold text-slate-800">Personal Weighing Slips & Voucher History</h2>
+            <h2 className="text-sm font-bold text-slate-800">{t('dashboard.recentTransactions')}</h2>
           </div>
           <span className="text-xs font-mono text-slate-500">Immutable ledger entries</span>
         </div>
@@ -246,13 +282,13 @@ export const KarigarDashboardPage: React.FC = () => {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold">
-                <th className="py-2.5 px-4 font-mono">Voucher #</th>
-                <th className="py-2.5 px-4">Transaction Stream</th>
-                <th className="py-2.5 px-4 font-mono">Job Code</th>
-                <th className="py-2.5 px-4 text-right">Gross Weight</th>
-                <th className="py-2.5 px-4 text-right">Purity</th>
-                <th className="py-2.5 px-4 text-right">Fine Gold</th>
-                <th className="py-2.5 px-4">HUID / Description</th>
+                <th className="py-2.5 px-4 font-mono">{t('table.voucher')}</th>
+                <th className="py-2.5 px-4">{t('table.type')}</th>
+                <th className="py-2.5 px-4 font-mono">{t('table.job')}</th>
+                <th className="py-2.5 px-4 text-right">{t('table.grossWeight')}</th>
+                <th className="py-2.5 px-4 text-right">{t('table.purity')}</th>
+                <th className="py-2.5 px-4 text-right">{t('table.fineWeight')}</th>
+                <th className="py-2.5 px-4">{t('table.huid')} / {t('table.description')}</th>
                 <th className="py-2.5 px-4">Remarks</th>
               </tr>
             </thead>
@@ -260,12 +296,14 @@ export const KarigarDashboardPage: React.FC = () => {
               {ledgerEntries.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-8 text-center text-slate-400 font-sans">
-                    No transactions recorded in personal ledger yet.
+                    {t('dashboard.emptyLedger')}
                   </td>
                 </tr>
               ) : (
                 ledgerEntries.map((entry) => {
                   const isIssue = entry.transactionType === 'ISSUE';
+                  const txKey = `tx.${entry.transactionType}`;
+                  const displayType = t(txKey) !== txKey ? t(txKey) : entry.transactionType;
                   return (
                     <tr key={entry.id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-2.5 px-4 font-semibold text-slate-900">{entry.voucherNumber}</td>
@@ -277,7 +315,7 @@ export const KarigarDashboardPage: React.FC = () => {
                               : 'bg-emerald-100 text-emerald-900'
                           }`}
                         >
-                          {entry.transactionType}
+                          {displayType}
                         </span>
                       </td>
                       <td className="py-2.5 px-4 text-slate-600">{entry.jobOrder?.jobCode || '—'}</td>

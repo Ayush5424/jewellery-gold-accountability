@@ -33,8 +33,13 @@ public class AppDto {
             @NotNull Long karigarId,
             @NotNull ItemCategory itemCategory,
             @NotBlank String description,
-            @NotNull @DecimalMin("0.01") @DecimalMax("20.00") BigDecimal allowedWastagePercent
-    ) {}
+            @DecimalMin("0.01") @DecimalMax("20.00") BigDecimal allowedWastagePercent,
+            String overrideReason
+    ) {
+        public CreateJobRequest(Long karigarId, ItemCategory itemCategory, String description, BigDecimal allowedWastagePercent) {
+            this(karigarId, itemCategory, description, allowedWastagePercent, null);
+        }
+    }
 
     public record IssueGoldRequest(
             @NotNull Long jobId,
@@ -269,5 +274,43 @@ public class AppDto {
                     a.getCreatedAt()
             );
         }
+    }
+
+    public record UpdateWastageAllowanceRequest(
+            @NotNull ItemCategory itemCategory,
+            @NotNull @DecimalMin("0.01") @DecimalMax("20.00") BigDecimal allowedWastagePercent
+    ) {}
+
+    public record KarigarWastageAllowanceResponse(
+            Long id,
+            Long karigarId,
+            String karigarCode,
+            String karigarName,
+            ItemCategory itemCategory,
+            BigDecimal allowedWastagePercent,
+            String updatedBy,
+            Instant updatedAt
+    ) {
+        public static KarigarWastageAllowanceResponse from(com.coimbatore.jewellery.domain.entity.KarigarWastageAllowance a) {
+            if (a == null) return null;
+            return new KarigarWastageAllowanceResponse(
+                    a.getId(),
+                    a.getKarigar() != null ? a.getKarigar().getId() : null,
+                    a.getKarigar() != null ? a.getKarigar().getKarigarCode() : null,
+                    a.getKarigar() != null ? a.getKarigar().getName() : null,
+                    a.getItemCategory(),
+                    a.getAllowedWastagePercent(),
+                    a.getUpdatedBy(),
+                    a.getUpdatedAt()
+            );
+        }
+        public Long getId() { return id; }
+        public Long getKarigarId() { return karigarId; }
+        public String getKarigarCode() { return karigarCode; }
+        public String getKarigarName() { return karigarName; }
+        public ItemCategory getItemCategory() { return itemCategory; }
+        public BigDecimal getAllowedWastagePercent() { return allowedWastagePercent; }
+        public String getUpdatedBy() { return updatedBy; }
+        public Instant getUpdatedAt() { return updatedAt; }
     }
 }

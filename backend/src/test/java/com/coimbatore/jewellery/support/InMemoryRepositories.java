@@ -1,5 +1,7 @@
 package com.coimbatore.jewellery.support;
 
+import com.coimbatore.jewellery.domain.entity.KarigarWastageAllowance;
+import com.coimbatore.jewellery.domain.enums.ItemCategory;
 import com.coimbatore.jewellery.domain.entity.GoldLedgerEntry;
 import com.coimbatore.jewellery.domain.entity.JobOrder;
 import com.coimbatore.jewellery.domain.entity.Karigar;
@@ -305,5 +307,58 @@ public class InMemoryRepositories {
         @Override public void deleteAll(Iterable<? extends LossAlert> entities) {}
         @Override public List<LossAlert> findAll(Sort sort) { return null; }
         @Override public Page<LossAlert> findAll(Pageable pageable) { return null; }
+    }
+
+    public static class InMemoryKarigarWastageAllowanceRepository implements KarigarWastageAllowanceRepository {
+        public final Map<Long, KarigarWastageAllowance> store = new ConcurrentHashMap<>();
+        private final AtomicLong seq = new AtomicLong(1);
+
+        @Override public <S extends KarigarWastageAllowance> S save(S entity) {
+            if (entity.getId() == null) entity.setId(seq.getAndIncrement());
+            store.put(entity.getId(), entity);
+            return entity;
+        }
+
+        @Override public List<KarigarWastageAllowance> findByKarigarId(Long karigarId) {
+            return store.values().stream()
+                    .filter(a -> a.getKarigar() != null && a.getKarigar().getId().equals(karigarId))
+                    .toList();
+        }
+
+        @Override public Optional<KarigarWastageAllowance> findByKarigarIdAndItemCategory(Long karigarId, ItemCategory itemCategory) {
+            return store.values().stream()
+                    .filter(a -> a.getKarigar() != null && a.getKarigar().getId().equals(karigarId) && a.getItemCategory() == itemCategory)
+                    .findFirst();
+        }
+
+        @Override public void deleteAll() { store.clear(); }
+        @Override public void flush() {}
+        @Override public <S extends KarigarWastageAllowance> S saveAndFlush(S entity) { return save(entity); }
+        @Override public <S extends KarigarWastageAllowance> List<S> saveAllAndFlush(Iterable<S> entities) { return null; }
+        @Override public void deleteAllInBatch(Iterable<KarigarWastageAllowance> entities) {}
+        @Override public void deleteAllByIdInBatch(Iterable<Long> longs) {}
+        @Override public void deleteAllInBatch() {}
+        @Override public KarigarWastageAllowance getOne(Long aLong) { return null; }
+        @Override public KarigarWastageAllowance getById(Long aLong) { return null; }
+        @Override public KarigarWastageAllowance getReferenceById(Long aLong) { return null; }
+        @Override public <S extends KarigarWastageAllowance> Optional<S> findOne(Example<S> example) { return Optional.empty(); }
+        @Override public <S extends KarigarWastageAllowance> List<S> findAll(Example<S> example) { return null; }
+        @Override public <S extends KarigarWastageAllowance> List<S> findAll(Example<S> example, Sort sort) { return null; }
+        @Override public <S extends KarigarWastageAllowance> Page<S> findAll(Example<S> example, Pageable pageable) { return null; }
+        @Override public <S extends KarigarWastageAllowance> long count(Example<S> example) { return 0; }
+        @Override public <S extends KarigarWastageAllowance> boolean exists(Example<S> example) { return false; }
+        @Override public <S extends KarigarWastageAllowance, R> R findBy(Example<S> example, Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) { return null; }
+        @Override public <S extends KarigarWastageAllowance> List<S> saveAll(Iterable<S> entities) { return null; }
+        @Override public List<KarigarWastageAllowance> findAll() { return new ArrayList<>(store.values()); }
+        @Override public List<KarigarWastageAllowance> findAllById(Iterable<Long> longs) { return null; }
+        @Override public Optional<KarigarWastageAllowance> findById(Long aLong) { return Optional.ofNullable(store.get(aLong)); }
+        @Override public boolean existsById(Long aLong) { return store.containsKey(aLong); }
+        @Override public long count() { return store.size(); }
+        @Override public void deleteById(Long aLong) { store.remove(aLong); }
+        @Override public void delete(KarigarWastageAllowance entity) { store.remove(entity.getId()); }
+        @Override public void deleteAllById(Iterable<? extends Long> longs) {}
+        @Override public void deleteAll(Iterable<? extends KarigarWastageAllowance> entities) {}
+        @Override public List<KarigarWastageAllowance> findAll(Sort sort) { return null; }
+        @Override public Page<KarigarWastageAllowance> findAll(Pageable pageable) { return null; }
     }
 }

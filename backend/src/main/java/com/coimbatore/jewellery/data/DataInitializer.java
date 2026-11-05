@@ -9,6 +9,7 @@ import com.coimbatore.jewellery.domain.enums.UserRole;
 import com.coimbatore.jewellery.repository.JobOrderRepository;
 import com.coimbatore.jewellery.repository.KarigarRepository;
 import com.coimbatore.jewellery.repository.UserRepository;
+import com.coimbatore.jewellery.service.KarigarWastageService;
 import com.coimbatore.jewellery.service.GoldLedgerService;
 import com.coimbatore.jewellery.service.JobReconciliationService;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ public class DataInitializer implements CommandLineRunner {
     private final JobOrderRepository jobRepository;
     private final GoldLedgerService ledgerService;
     private final JobReconciliationService reconciliationService;
+    private final KarigarWastageService karigarWastageService;
     private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(UserRepository userRepository,
@@ -37,12 +39,14 @@ public class DataInitializer implements CommandLineRunner {
                            JobOrderRepository jobRepository,
                            GoldLedgerService ledgerService,
                            JobReconciliationService reconciliationService,
+                           KarigarWastageService karigarWastageService,
                            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.karigarRepository = karigarRepository;
         this.jobRepository = jobRepository;
         this.ledgerService = ledgerService;
         this.reconciliationService = reconciliationService;
+        this.karigarWastageService = karigarWastageService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -69,6 +73,9 @@ public class DataInitializer implements CommandLineRunner {
             karigarRepository.save(new Karigar("KRG-007", "Kuppusamy V", "+91 98422 10007", "Town Hall Showroom Unit", "kuppusamy"));
             karigarRepository.save(new Karigar("KRG-008", "Shanmugam T", "+91 98422 10008", "Peelamedu Showroom Unit", "shanmugam"));
         }
+
+        // Seed wastage matrix defaults for all karigars
+        karigarRepository.findAll().forEach(k -> karigarWastageService.seedDefaultsForKarigar(k, "DATA_INITIALIZER"));
 
         Karigar murugesan = karigarRepository.findByUsername("murugesan").orElse(null);
         Karigar sivakumar = karigarRepository.findByUsername("sivakumar").orElse(null);

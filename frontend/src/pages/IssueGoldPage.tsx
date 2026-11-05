@@ -420,6 +420,7 @@ export const IssueGoldPage: React.FC<{ onNavigateToLedger: (jobId: number) => vo
             { label: 'Job Order', value: selectedJob.jobCode },
             { label: 'Assigned Artisan', value: selectedJob.karigar ? selectedJob.karigar.name : 'Assigned' },
             { label: 'Item Category', value: selectedJob.itemCategory },
+            { label: 'Agreed Category Wastage', value: `${selectedJob.allowedWastagePercent.toFixed(2)} %` },
             { label: 'Gross Scale Weight', value: grossNum, isWeight: true },
             { label: 'Fineness / Purity', value: `${purityNum.toFixed(2)} %` },
             { label: 'Calculated Pure Fine Gold', value: calculatedFine, isWeight: true },

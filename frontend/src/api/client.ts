@@ -1,4 +1,4 @@
-import { AuthUser, Karigar, JobOrder, GoldLedgerEntry, LossAlert, StockSummary } from '../types';
+import { AuthUser, Karigar, JobOrder, GoldLedgerEntry, LossAlert, StockSummary, KarigarWastageAllowance } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -89,6 +89,13 @@ export const api = {
   // Karigars
   getKarigars: () => request<Karigar[]>('/karigars'),
   getKarigarById: (id: number) => request<Karigar>(`/karigars/${id}`),
+  getKarigarWastageAllowances: (karigarId: number) =>
+    request<KarigarWastageAllowance[]>(`/karigars/${karigarId}/wastage-allowances`),
+  updateKarigarWastageAllowance: (karigarId: number, itemCategory: string, allowedWastagePercent: number) =>
+    request<KarigarWastageAllowance>(`/karigars/${karigarId}/wastage-allowances`, {
+      method: 'PUT',
+      body: JSON.stringify({ itemCategory, allowedWastagePercent }),
+    }),
   createKarigar: (data: Partial<Karigar>) =>
     request<Karigar>('/karigars', {
       method: 'POST',

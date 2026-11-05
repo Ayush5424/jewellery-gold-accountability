@@ -98,3 +98,14 @@ export interface StockSummary {
   totalIssuedFine: number;
   totalRecoveredFine: number;
 }
+
+export interface KarigarWastageAllowance {
+  id?: number;
+  karigarId?: number;
+  karigarCode?: string;
+  karigarName?: string;
+  itemCategory: ItemCategory;
+  allowedWastagePercent: number;
+  updatedBy?: string;
+  updatedAt?: string;
+}
