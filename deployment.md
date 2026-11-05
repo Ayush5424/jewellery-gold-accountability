@@ -105,10 +105,10 @@ Get-Service -Name postgresql* | Start-Service
 
 ### Step 2: Start the AI Extraction Microservice (FastAPI & Tesseract OCR)
 1. **Install Tesseract OCR**:
-   - **Windows**: Install Tesseract OCR 5.4+ (default path: `C:\Users\dell\tesseract-ocr\tesseract.exe` or `C:\Program Files\Tesseract-OCR\tesseract.exe`) with English traineddata (`eng.traineddata`). Set environment variables if using a custom location:
+   - **Windows**: Install Tesseract OCR 5.4+ (standard path: `C:\Program Files\Tesseract-OCR\tesseract.exe` or user home `~\tesseract-ocr\tesseract.exe`) with English traineddata (`eng.traineddata`). Set environment variables if using a custom location:
      ```powershell
-     $env:TESSERACT_CMD = "C:\Users\dell\tesseract-ocr\tesseract.exe"
-     $env:TESSDATA_PREFIX = "C:\Users\dell\tesseract-ocr\tessdata"
+     $env:TESSERACT_CMD = "C:\Program Files\Tesseract-OCR\tesseract.exe"
+     $env:TESSDATA_PREFIX = "C:\Program Files\Tesseract-OCR\tessdata"
      ```
    - **Linux / Docker**:
      ```bash
@@ -211,13 +211,13 @@ docker compose down
 
 The system comes pre-seeded with verified test accounts across all three business roles. You can immediately log into the web portal with these credentials:
 
-| Role | Username | Password | Full Name / Description | Permissions |
+| Role | Username | Password Configuration | Full Name / Description | Permissions |
 | :--- | :--- | :--- | :--- | :--- |
-| **Finance Head** | `finance_head` | `finance123` | Natarajan Sundaram | Full administrative authority: views total company stock, loss dashboards, karigar benchmark drift, approves reconciliations, exports Tally XML. |
-| **Issue Clerk** | `issue_clerk` | `clerk123` | K. Ramanathan | Workshop operations: registers karigars, issues raw gold, logs returned items/scrap, uploads scale slips, triggers reconciliation. |
-| **Artisan Karigar** | `murugesan` | `karigar123` | Murugesan A. | Senior Karigar: views personal outstanding gold, assigned active jobs, past job loss history. Strictly isolated from other karigars. |
-| **Artisan Karigar** | `sivakumar` | `karigar123` | Sivakumar V. | Karigar: assigned jobs, balance summary. |
-| **Artisan Karigar** | `marimuthu` | `karigar123` | Marimuthu K. | Karigar: assigned jobs, balance summary. |
+| **Finance Head** | `finance_head` | Loaded from `.env` (`DEMO_FINANCE_PASSWORD`) | Natarajan Sundaram | Full administrative authority: views total company stock, loss dashboards, karigar benchmark drift, approves reconciliations, exports Tally XML. |
+| **Issue Clerk** | `issue_clerk` | Loaded from `.env` (`DEMO_CLERK_PASSWORD`) | K. Ramanathan | Workshop operations: registers karigars, issues raw gold, logs returned items/scrap, uploads scale slips, triggers reconciliation. |
+| **Artisan Karigar** | `murugesan` | Loaded from `.env` (`DEMO_KARIGAR_PASSWORD`) | Murugesan A. | Senior Karigar: views personal outstanding gold, assigned active jobs, past job loss history. Strictly isolated from other karigars. |
+| **Artisan Karigar** | `sivakumar` | Loaded from `.env` (`DEMO_KARIGAR_PASSWORD`) | Sivakumar V. | Karigar: assigned jobs, balance summary. |
+| **Artisan Karigar** | `marimuthu` | Loaded from `.env` (`DEMO_KARIGAR_PASSWORD`) | Marimuthu K. | Karigar: assigned jobs, balance summary. |
 
 ---
 
@@ -274,7 +274,7 @@ python -m pytest tests/
 | Issue | Root Cause | Solution |
 | :--- | :--- | :--- |
 | `java.lang.ClassNotFoundException` for main class | IntelliJ run configuration pointing to incorrect package or Maven target not compiled | Verify main class is `com.coimbatore.jewellery.JewelleryGoldApplication`. Run `mvn clean compile` before starting. |
-| `401 Unauthorized` on `/api/auth/login` | SecurityConfig context-path mismatch | Security filter matches both `/auth/**` and `/api/auth/**`. Ensure credentials match seeded users (`finance123`, `clerk123`, `karigar123`). |
+| `401 Unauthorized` on `/api/auth/login` | SecurityConfig context-path mismatch or bad password | Security filter matches both `/auth/**` and `/api/auth/**`. Ensure password matches `DEMO_*_PASSWORD` loaded into database. |
 | `Connection refused: localhost:5432` | PostgreSQL service not running or listening on alternate port | Verify PostgreSQL service is running: `Get-Service postgresql*`. Check `5432` in `netstat -ano`. |
 | `FATAL: password authentication failed for user "postgres"` | Incorrect `SPRING_DATASOURCE_PASSWORD` | Set the correct password in `SPRING_DATASOURCE_PASSWORD` environment variable or IntelliJ Run Configuration. |
 | AI slip extraction returning empty draft | Image resolution too low or scale digits blurred | Ensure scale slip photo is taken in clear lighting. Fallback manual input is always enabled in the UI. |

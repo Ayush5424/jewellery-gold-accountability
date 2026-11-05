@@ -669,7 +669,7 @@ def generate_pdf(output_path):
     print(f"Generated PDF at: {output_path}")
 
 if __name__ == "__main__":
-    base_dir = r"C:\Users\dell\OneDrive\Desktop\jewellery-gold-accountability"
+    base_dir = os.path.dirname(os.path.abspath(__file__))
     docx_path = os.path.join(base_dir, "TDD.docx")
     pdf_path = os.path.join(base_dir, "TDD.pdf")
     generate_docx(docx_path)

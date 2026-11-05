@@ -141,7 +141,7 @@ The complete end-to-end Issue Clerk workflow was verified against the business s
 
 The complete pipeline was verified across both running services (FastAPI on port 8000 and Spring Boot on port 8080):
 
-1. **Authentication**: Issue clerk logged in via `POST /api/auth/login` (credentials `issue_clerk` / `clerk123`), receiving JWT bearer token.
+1. **Authentication**: Issue clerk logged in via `POST /api/auth/login` (credentials `issue_clerk` / configured `DEMO_CLERK_PASSWORD`), receiving JWT bearer token.
 2. **Image Upload**: Uploaded `test-data/ai-slip-samples/scale_01_clear_12_450g.png` to `POST http://localhost:8000/extract-slip`.
 3. **Actual OCR Output**:
    - Extracted Weight: `12.450 g`

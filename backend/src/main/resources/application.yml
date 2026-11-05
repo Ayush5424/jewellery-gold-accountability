@@ -11,7 +11,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:jewellery_gold_db}}
     username: ${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER:postgres}}
-    password: ${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD:gold_secure_password_coimbatore_2026}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD:}}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -32,3 +32,7 @@ app:
   loss-detection:
     min-completed-jobs-for-drift: 5
     historical-drift-tolerance-pct: 0.10
+  demo-users:
+    finance-password: ${DEMO_FINANCE_PASSWORD:}
+    clerk-password: ${DEMO_CLERK_PASSWORD:}
+    karigar-password: ${DEMO_KARIGAR_PASSWORD:}

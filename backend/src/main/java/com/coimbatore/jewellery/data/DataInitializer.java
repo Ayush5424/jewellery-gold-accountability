@@ -14,6 +14,7 @@ import com.coimbatore.jewellery.service.GoldLedgerService;
 import com.coimbatore.jewellery.service.JobReconciliationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,15 @@ public class DataInitializer implements CommandLineRunner {
     private final KarigarWastageService karigarWastageService;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${DEMO_FINANCE_PASSWORD:${app.demo-users.finance-password:}}")
+    private String demoFinancePassword;
+
+    @Value("${DEMO_CLERK_PASSWORD:${app.demo-users.clerk-password:}}")
+    private String demoClerkPassword;
+
+    @Value("${DEMO_KARIGAR_PASSWORD:${app.demo-users.karigar-password:}}")
+    private String demoKarigarPassword;
+
     public DataInitializer(UserRepository userRepository,
                            KarigarRepository karigarRepository,
                            JobOrderRepository jobRepository,
@@ -48,6 +58,12 @@ public class DataInitializer implements CommandLineRunner {
         this.reconciliationService = reconciliationService;
         this.karigarWastageService = karigarWastageService;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    public void setDemoPasswords(String finance, String clerk, String karigar) {
+        this.demoFinancePassword = finance;
+        this.demoClerkPassword = clerk;
+        this.demoKarigarPassword = karigar;
     }
 
     @Override
@@ -82,14 +98,15 @@ public class DataInitializer implements CommandLineRunner {
         Karigar marimuthu = karigarRepository.findByUsername("marimuthu").orElse(null);
 
         // 2. Guarantee that evaluation credentials exist with valid BCrypt hashes and karigar links
-        ensureUser("finance_head", "finance123", "Saravanan R (Finance Head)", UserRole.ROLE_FINANCE_HEAD, null);
-        ensureUser("issue_clerk", "clerk123", "Ramalingam K (Issue Clerk)", UserRole.ROLE_ISSUE_CLERK, null);
-        ensureUser("murugesan", "karigar123", "Murugesan S (Master Karigar)", UserRole.ROLE_KARIGAR, murugesan);
-        ensureUser("sivakumar", "karigar123", "Sivakumar P (Karigar)", UserRole.ROLE_KARIGAR, sivakumar);
-        ensureUser("marimuthu", "karigar123", "Marimuthu N (Karigar)", UserRole.ROLE_KARIGAR, marimuthu);
+        // Only initializes if the account does NOT already exist; never overwrites existing passwords.
+        ensureUser("finance_head", demoFinancePassword, "Saravanan R (Finance Head)", UserRole.ROLE_FINANCE_HEAD, null);
+        ensureUser("issue_clerk", demoClerkPassword, "Ramalingam K (Issue Clerk)", UserRole.ROLE_ISSUE_CLERK, null);
+        ensureUser("murugesan", demoKarigarPassword, "Murugesan S (Master Karigar)", UserRole.ROLE_KARIGAR, murugesan);
+        ensureUser("sivakumar", demoKarigarPassword, "Sivakumar P (Karigar)", UserRole.ROLE_KARIGAR, sivakumar);
+        ensureUser("marimuthu", demoKarigarPassword, "Marimuthu N (Karigar)", UserRole.ROLE_KARIGAR, marimuthu);
 
         // 3. Seed Benchmark Jobs if no jobs exist
-        if (jobRepository.count() == 0 && murugesan != null && sivakumar != null && marimuthu != null) {
+        if (ledgerService != null && reconciliationService != null && jobRepository.count() == 0 && murugesan != null && sivakumar != null && marimuthu != null) {
             log.info("Seeding initial benchmark jobs and gold transactions...");
 
             // Murugesan S Benchmark Job (Active in interim state matching assessment prompt)
@@ -116,18 +133,11 @@ public class DataInitializer implements CommandLineRunner {
 
     private void ensureUser(String username, String rawPassword, String fullName, UserRole role, Karigar karigar) {
         User user = userRepository.findByUsername(username).orElse(null);
-        if (user == null) {
-            log.info("Creating evaluation user account: {} ({})", username, role);
-            userRepository.save(new User(username, passwordEncoder.encode(rawPassword), fullName, role, karigar));
-        } else {
+        if (user != null) {
+            // Idempotent: preserve existing user account and password hash completely
             boolean updated = false;
-            if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
-                log.info("Resetting password hash for evaluation user: {}", username);
-                user.setPasswordHash(passwordEncoder.encode(rawPassword));
-                updated = true;
-            }
             if (karigar != null && (user.getKarigar() == null || !karigar.getId().equals(user.getKarigar().getId()))) {
-                log.info("Linking karigar ID {} to user: {}", karigar.getId(), username);
+                log.info("Linking karigar ID {} to existing user: {}", karigar.getId(), username);
                 user.setKarigar(karigar);
                 updated = true;
             }
@@ -138,6 +148,17 @@ public class DataInitializer implements CommandLineRunner {
             if (updated) {
                 userRepository.save(user);
             }
+            return;
         }
+
+        // Only create new account if a non-blank password was provided via environment
+        if (rawPassword == null || rawPassword.trim().isEmpty()) {
+            log.warn("Evaluation user '{}' not found and password environment variable is missing. User was not created.", username);
+            return;
+        }
+
+        log.info("Creating initial evaluation user account: {} ({}) with BCrypt hash", username, role);
+        String encodedPassword = passwordEncoder.encode(rawPassword.trim());
+        userRepository.save(new User(username, encodedPassword, fullName, role, karigar));
     }
 }

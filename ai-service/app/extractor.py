@@ -30,10 +30,15 @@ import pytesseract
 # Configure Tesseract binary path
 _tesseract_candidate = os.environ.get("TESSERACT_CMD")
 if not _tesseract_candidate:
-    if os.path.exists(r"C:\Users\dell\tesseract-ocr\tesseract.exe"):
-        _tesseract_candidate = r"C:\Users\dell\tesseract-ocr\tesseract.exe"
-    elif shutil.which("tesseract"):
+    user_tess_exe = os.path.expanduser(r"~\tesseract-ocr\tesseract.exe")
+    if shutil.which("tesseract"):
         _tesseract_candidate = shutil.which("tesseract")
+    elif os.path.exists(r"C:\Program Files\Tesseract-OCR\tesseract.exe"):
+        _tesseract_candidate = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    elif os.path.exists(user_tess_exe):
+        _tesseract_candidate = user_tess_exe
+    elif os.path.exists(r"C:\tesseract-ocr\tesseract.exe"):
+        _tesseract_candidate = r"C:\tesseract-ocr\tesseract.exe"
     elif os.path.exists("/usr/bin/tesseract"):
         _tesseract_candidate = "/usr/bin/tesseract"
 
@@ -42,8 +47,11 @@ if _tesseract_candidate:
 
 # Configure Tessdata directory
 if "TESSDATA_PREFIX" not in os.environ:
-    if os.path.exists(r"C:\Users\dell\tesseract-ocr\tessdata"):
-        os.environ["TESSDATA_PREFIX"] = r"C:\Users\dell\tesseract-ocr\tessdata"
+    user_tessdata = os.path.expanduser(r"~\tesseract-ocr\tessdata")
+    if os.path.exists(r"C:\Program Files\Tesseract-OCR\tessdata"):
+        os.environ["TESSDATA_PREFIX"] = r"C:\Program Files\Tesseract-OCR\tessdata"
+    elif os.path.exists(user_tessdata):
+        os.environ["TESSDATA_PREFIX"] = user_tessdata
     elif os.path.exists("/usr/share/tesseract-ocr/5/tessdata"):
         os.environ["TESSDATA_PREFIX"] = "/usr/share/tesseract-ocr/5/tessdata"
     elif os.path.exists("/usr/share/tessdata"):

@@ -26,17 +26,12 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickLogin = async (userVal: string, passVal: string) => {
+  const handleSelectRole = (userVal: string) => {
     setUsername(userVal);
-    setPassword(passVal);
-    setLoading(true);
     setError(null);
-    try {
-      await login(userVal, passVal);
-    } catch (err: any) {
-      setError(err.message || 'Authentication failed.');
-    } finally {
-      setLoading(false);
+    const passInput = document.getElementById('password') as HTMLInputElement | null;
+    if (passInput) {
+      passInput.focus();
     }
   };
 
@@ -121,12 +116,12 @@ export const LoginPage: React.FC = () => {
           {/* Quick Demo Role Switcher */}
           <div className="pt-4 border-t border-slate-800">
             <p className="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-2.5 text-center">
-              Quick Role Sign-In (Evaluation Profiles)
+              Quick Role Select (Profile Autofill)
             </p>
             <div className="grid grid-cols-1 gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickLogin('finance_head', 'finance123')}
+                onClick={() => handleSelectRole('finance_head')}
                 className="w-full px-3 py-2 bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 rounded text-left transition-colors flex items-center justify-between text-xs"
               >
                 <div>
@@ -140,7 +135,7 @@ export const LoginPage: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('issue_clerk', 'clerk123')}
+                onClick={() => handleSelectRole('issue_clerk')}
                 className="w-full px-3 py-2 bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 rounded text-left transition-colors flex items-center justify-between text-xs"
               >
                 <div>
@@ -154,7 +149,7 @@ export const LoginPage: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => handleQuickLogin('murugesan', 'karigar123')}
+                onClick={() => handleSelectRole('murugesan')}
                 className="w-full px-3 py-2 bg-slate-950 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 rounded text-left transition-colors flex items-center justify-between text-xs"
               >
                 <div>

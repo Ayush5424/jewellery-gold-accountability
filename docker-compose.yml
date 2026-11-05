@@ -7,14 +7,14 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-jewellery_gold_db}
-      POSTGRES_USER: ${POSTGRES_USER:-gold_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gold_secure_password_coimbatore_2026}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gold_admin} -d ${POSTGRES_DB:-jewellery_gold_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-jewellery_gold_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -30,8 +30,11 @@ services:
         condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-jewellery_gold_db}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-gold_admin}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-gold_secure_password_coimbatore_2026}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      DEMO_FINANCE_PASSWORD: ${DEMO_FINANCE_PASSWORD:-}
+      DEMO_CLERK_PASSWORD: ${DEMO_CLERK_PASSWORD:-}
+      DEMO_KARIGAR_PASSWORD: ${DEMO_KARIGAR_PASSWORD:-}
       AI_SERVICE_URL: http://ai-service:8000
     ports:
       - "8080:8080"

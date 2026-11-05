@@ -155,17 +155,17 @@ flowchart TD
 
 ---
 
-## 6. Pre-Configured Demo Credentials
+## 6. Evaluation User Accounts & Security Configuration
 
 The system seeds verified accounts for all three business roles out of the box:
 
-| Role | Username | Password | Full Name | Access Scope |
+| Role | Username | Password Source | Full Name | Access Scope |
 | :--- | :--- | :--- | :--- | :--- |
-| `ROLE_FINANCE_HEAD` | `finance_head` | `finance123` | Natarajan Sundaram | Full company visibility, dashboards, loss alerts, Tally export |
-| `ROLE_ISSUE_CLERK` | `issue_clerk` | `clerk123` | K. Ramanathan | Karigar registration, gold issuance, receipt logging, reconciliation |
-| `ROLE_KARIGAR` | `murugesan` | `karigar123` | Murugesan A. | Senior Karigar: personal jobs, ledger, and balance (isolated) |
-| `ROLE_KARIGAR` | `sivakumar` | `karigar123` | Sivakumar V. | Artisan: personal jobs and balance |
-| `ROLE_KARIGAR` | `marimuthu` | `karigar123` | Marimuthu K. | Artisan: personal jobs and balance |
+| `ROLE_FINANCE_HEAD` | `finance_head` | Configured in `.env` (`DEMO_FINANCE_PASSWORD`) | Natarajan Sundaram | Full company visibility, dashboards, loss alerts, Tally export |
+| `ROLE_ISSUE_CLERK` | `issue_clerk` | Configured in `.env` (`DEMO_CLERK_PASSWORD`) | K. Ramanathan | Karigar registration, gold issuance, receipt logging, reconciliation |
+| `ROLE_KARIGAR` | `murugesan` | Configured in `.env` (`DEMO_KARIGAR_PASSWORD`) | Murugesan A. | Senior Karigar: personal jobs, ledger, and balance (isolated) |
+| `ROLE_KARIGAR` | `sivakumar` | Configured in `.env` (`DEMO_KARIGAR_PASSWORD`) | Sivakumar V. | Artisan: personal jobs and balance |
+| `ROLE_KARIGAR` | `marimuthu` | Configured in `.env` (`DEMO_KARIGAR_PASSWORD`) | Marimuthu K. | Artisan: personal jobs and balance |
 
 ---
 
@@ -272,7 +272,7 @@ dist/assets/index-ZH1RQAKx.js   241.35 kB
 
 ## 10. Sample Calculation Verification
 
-The core calculation mandated in the assignment specification was verified in unit tests ([`GoldAccountingCalculatorTest.java`](file:///C:/Users/dell/OneDrive/Desktop/jewellery-gold-accountability/backend/src/test/java/com/coimbatore/jewellery/domain/accounting/GoldAccountingCalculatorTest.java)):
+The core calculation mandated in the assignment specification was verified in unit tests ([`GoldAccountingCalculatorTest.java`](backend/src/test/java/com/coimbatore/jewellery/domain/accounting/GoldAccountingCalculatorTest.java)):
 
 | Stage | Input Figures | Mathematical Computation | Result |
 | :--- | :--- | :--- | :--- |
