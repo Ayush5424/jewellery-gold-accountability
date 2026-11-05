@@ -155,7 +155,7 @@ export const KarigarDashboardPage: React.FC = () => {
             </span>
             <span className="text-xs font-mono font-medium text-slate-500">g fine</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">24kt pure gold custodian liability</p>
+          <p className="text-[11px] text-slate-400 mt-1">{t('dashboard.custodianLiability')}</p>
           <div className="absolute top-0 right-0 w-16 h-16 bg-amber-50 rounded-full -mr-8 -mt-8 pointer-events-none" />
         </div>
 
@@ -171,7 +171,7 @@ export const KarigarDashboardPage: React.FC = () => {
             </span>
             <span className="text-xs font-mono font-medium text-slate-500">g fine</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Cumulative bullion & bars assigned</p>
+          <p className="text-[11px] text-slate-400 mt-1">{t('dashboard.cumulativeBullion')}</p>
         </div>
 
         {/* Total Returned */}
@@ -186,7 +186,7 @@ export const KarigarDashboardPage: React.FC = () => {
             </span>
             <span className="text-xs font-mono font-medium text-slate-500">g fine</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Jewellery, scrap & filings accounted</p>
+          <p className="text-[11px] text-slate-400 mt-1">{t('dashboard.materialsAccounted')}</p>
         </div>
 
         {/* Active vs Reconciled Jobs */}
@@ -202,7 +202,7 @@ export const KarigarDashboardPage: React.FC = () => {
             <span className="text-sm font-mono text-slate-600">{reconciledJobs.length}</span>
             <span className="text-xs text-slate-500">{language === 'ta' ? 'முடிந்தது' : 'reconciled'}</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Total {jobs.length} jobs assigned</p>
+          <p className="text-[11px] text-slate-400 mt-1">{language === 'ta' ? `மொத்தம் ${jobs.length} பணிகள்` : `Total ${jobs.length} jobs assigned`}</p>
         </div>
       </div>
 
@@ -213,7 +213,7 @@ export const KarigarDashboardPage: React.FC = () => {
             <Hammer className="w-4 h-4 text-amber-600" />
             <h2 className="text-sm font-bold text-slate-800">{t('dashboard.myJobs')}</h2>
           </div>
-          <span className="text-xs font-mono text-slate-500">Showing {jobs.length} jobs</span>
+          <span className="text-xs font-mono text-slate-500">{language === 'ta' ? `${jobs.length} பணிகள் காட்டப்படுகின்றன` : `Showing ${jobs.length} jobs`}</span>
         </div>
 
         <div className="overflow-x-auto">
@@ -226,7 +226,7 @@ export const KarigarDashboardPage: React.FC = () => {
                 <th className="py-2.5 px-4 text-right">{t('dashboard.allowedWastage')}</th>
                 <th className="py-2.5 px-4 text-right">{t('dashboard.totalIssued')}</th>
                 <th className="py-2.5 px-4 text-right">{t('dashboard.totalDelivered')}</th>
-                <th className="py-2.5 px-4 text-right">Outstanding</th>
+                <th className="py-2.5 px-4 text-right">{t('table.outstanding')}</th>
                 <th className="py-2.5 px-4 text-center">{t('table.status')}</th>
               </tr>
             </thead>
@@ -275,7 +275,7 @@ export const KarigarDashboardPage: React.FC = () => {
             <FileText className="w-4 h-4 text-amber-600" />
             <h2 className="text-sm font-bold text-slate-800">{t('dashboard.recentTransactions')}</h2>
           </div>
-          <span className="text-xs font-mono text-slate-500">Immutable ledger entries</span>
+          <span className="text-xs font-mono text-slate-500">{language === 'ta' ? 'மாற்ற முடியாத கணக்கு பதிவுகள்' : 'Immutable ledger entries'}</span>
         </div>
 
         <div className="overflow-x-auto">
@@ -289,7 +289,7 @@ export const KarigarDashboardPage: React.FC = () => {
                 <th className="py-2.5 px-4 text-right">{t('table.purity')}</th>
                 <th className="py-2.5 px-4 text-right">{t('table.fineWeight')}</th>
                 <th className="py-2.5 px-4">{t('table.huid')} / {t('table.description')}</th>
-                <th className="py-2.5 px-4">Remarks</th>
+                <th className="py-2.5 px-4">{t('table.remarks')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-mono">

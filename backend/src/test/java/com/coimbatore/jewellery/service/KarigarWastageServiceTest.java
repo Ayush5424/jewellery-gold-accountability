@@ -1,6 +1,7 @@
 package com.coimbatore.jewellery.service;
 
 import com.coimbatore.jewellery.common.exception.BusinessValidationException;
+import com.coimbatore.jewellery.domain.entity.JobOrder;
 import com.coimbatore.jewellery.domain.entity.Karigar;
 import com.coimbatore.jewellery.domain.entity.KarigarWastageAllowance;
 import com.coimbatore.jewellery.domain.enums.ItemCategory;
@@ -84,5 +85,25 @@ class KarigarWastageServiceTest {
         service.seedDefaultsForKarigar(testKarigar, "SYSTEM_INIT");
         List<KarigarWastageAllowance> persisted = allowanceRepo.findByKarigarId(testKarigar.getId());
         assertEquals(ItemCategory.values().length, persisted.size());
+    }
+
+    @Test
+    @DisplayName("Should snapshot allowance into JobOrder; future master matrix updates must not alter historical job orders")
+    void shouldSnapshotAllowanceAndPreserveHistoricalJobs() {
+        BigDecimal initialWastage = service.resolveWastagePercent(testKarigar.getId(), ItemCategory.CHAIN);
+        assertEquals(new BigDecimal("1.20"), initialWastage);
+
+        // Create job order snapshotting 1.20%
+        JobOrder historicalJob = new JobOrder("JOB-2026-0001", testKarigar, ItemCategory.CHAIN, "Rope Chain", initialWastage);
+        assertEquals(new BigDecimal("1.20"), historicalJob.getAllowedWastagePercent());
+
+        // Master matrix is subsequently updated by Finance Head to 1.45%
+        service.updateAllowance(testKarigar.getId(), ItemCategory.CHAIN, new BigDecimal("1.45"), "finance_head");
+        BigDecimal newMasterAllowance = service.resolveWastagePercent(testKarigar.getId(), ItemCategory.CHAIN);
+        assertEquals(new BigDecimal("1.45"), newMasterAllowance);
+
+        // Historical job order must retain 1.20% permanently
+        assertEquals(new BigDecimal("1.20"), historicalJob.getAllowedWastagePercent(),
+                "Historical JobOrder wastage must remain unchanged after master allowance update");
     }
 }
