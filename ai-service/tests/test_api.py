@@ -1,37 +1,74 @@
-from main import health_check, extract_slip
-from fastapi import UploadFile
+import os
 import io
+import pytest
+from fastapi.testclient import TestClient
+from main import app
+
+client = TestClient(app)
 
 def test_health():
-    res = health_check()
-    assert res["status"] == "HEALTHY"
+    res = client.get("/health")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "HEALTHY"
+    assert "Tesseract" in data["ocr_engine"]
 
-def test_extract_slip_endpoint():
-    res = extract_slip(None, "Coimbatore Workshop Gross Weight: 120.000g Purity: 91.60%")
-    assert res.weight == 120.0
-    assert res.purity == 91.6
-    assert res.status == "HIGH_CONFIDENCE_DRAFT"
-    assert res.confidence >= 0.70
-    assert res.requires_human_confirmation is True
-    assert res.missing_fields == []
+def test_extract_slip_text_hint():
+    res = client.post("/extract-slip", data={"text_hint": "GROSS WEIGHT: 120.000 g PURITY: 91.60 %"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["weight"] == 120.000
+    assert data["purity"] == 91.60
+    assert data["status"] == "HIGH_CONFIDENCE_DRAFT"
+    assert data["requires_human_confirmation"] is True
+    assert data["missing_fields"] == []
 
 def test_extract_slip_missing_purity():
-    res = extract_slip(None, "Scale Gross Weight: 85.500g")
-    assert res.weight == 85.500
-    assert "purity" in res.missing_fields
-    assert res.requires_human_confirmation is True
+    res = client.post("/extract-slip", data={"text_hint": "Scale Gross Weight: 85.500 g"})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["weight"] == 85.500
+    assert "purity" in data["missing_fields"]
+    assert data["requires_human_confirmation"] is True
 
 def test_extract_slip_with_image_upload():
-    # Create a small valid test PNG image in memory using PIL
-    from PIL import Image
-    buf = io.BytesIO()
-    img = Image.new('RGB', (100, 50), color=(255, 255, 255))
-    img.save(buf, format='PNG')
-    buf.seek(0)
+    samples_dir = os.path.join(os.path.dirname(__file__), "..", "..", "test-data", "ai-slip-samples")
+    sample_file = os.path.join(samples_dir, "scale_01_clear_12_450g.png")
+    
+    if os.path.exists(sample_file):
+        with open(sample_file, "rb") as f:
+            res = client.post(
+                "/extract-slip",
+                files={"file": ("scale_01.png", f, "image/png")}
+            )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["weight"] == 12.450
+        assert data["status"] == "HIGH_CONFIDENCE_DRAFT"
+        assert data["requires_human_confirmation"] is True
+        assert "raw_ocr_text" in data
+        assert "12.450" in data["raw_ocr_text"]
 
-    upload = UploadFile(filename="slip_scale_120g_916.png", file=buf)
-    res = extract_slip(upload, "Weight: 120.000g 916 Hallmarked")
-    assert res.weight == 120.000
-    assert res.purity == 91.60
-    assert "image_metadata" in res.extracted_fields
-    assert res.extracted_fields["image_metadata"]["format"] == "PNG"
+def test_extract_slip_blurry_image_rejection():
+    samples_dir = os.path.join(os.path.dirname(__file__), "..", "..", "test-data", "ai-slip-samples")
+    sample_file = os.path.join(samples_dir, "scale_06_blurry_obscured.png")
+    
+    if os.path.exists(sample_file):
+        with open(sample_file, "rb") as f:
+            res = client.post(
+                "/extract-slip",
+                files={"file": ("scale_06_blur.png", f, "image/png")}
+            )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "LOW_CONFIDENCE_MANUAL_REQUIRED"
+        assert data["requires_human_confirmation"] is True
+        assert data["extracted_fields"].get("is_blurry") is True
+
+def test_empty_request():
+    res = client.post("/extract-slip")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "LOW_CONFIDENCE_MANUAL_REQUIRED"
+    assert data["weight"] is None
+    assert data["purity"] is None

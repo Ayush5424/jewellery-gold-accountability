@@ -10,26 +10,23 @@
       "behavior": "SUCCESSFUL_EXTRACTION"
     },
     "actual": {
-      "weight": 3.3,
-      "purity": 91.6,
-      "confidence": 0.95,
+      "weight": 12.45,
+      "purity": null,
+      "confidence": 0.75,
       "status": "HIGH_CONFIDENCE_DRAFT",
       "blur_variance": 1045.46,
       "is_blurry": false,
-      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "notice": "Draft reading only. Visual verification and human confirmation required before saving.",
+      "raw_ocr_snippet": "METTLER TOLECO - PRECISION GOLD BALANCE Max 200g \u20ac=C.0C4\neste\n\u201c 12.450\n. g\n1 aeRS Tae\n\nMETTLER TOLECO \u00bb PRECISION GOLD BALANCE Max 200g \u00ab\u00a30.00\nestes\n\u201c 12.450\n. g\n1 aeRS Ta\n\nMETTLER TOLEDO \u00bb PRECISION ",
       "extracted_fields": {
-        "raw_input_length": 257923,
-        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
-        "image_metadata": {
-          "format": "PNG",
-          "width": 640,
-          "height": 420,
-          "mode": "RGB",
-          "blur_variance": 1045.46
-        }
+        "document_type": "DIGITAL_WEIGHING_SCALE",
+        "detected_weight_token": "12.450 g (digital scale)",
+        "blur_variance": 1045.46,
+        "is_blurry": false,
+        "raw_ocr_text": "METTLER TOLECO - PRECISION GOLD BALANCE Max 200g \u20ac=C.0C4\neste\n\u201c 12.450\n. g\n1 aeRS Tae\n\nMETTLER TOLECO \u00bb PRECISION GOLD BALANCE Max 200g \u00ab\u00a30.00\nestes\n\u201c 12.450\n. g\n1 aeRS Ta\n\nMETTLER TOLEDO \u00bb PRECISION GOLD BALANCE Iax 200g d=0.CC4\n@ STSELE 2\n\u2018Et\n12.450 ,\n| ZERO TARE\n\nM i LECO +P 4 \" LAN 5 ; hla : d=c.CC 4"
       }
     },
-    "verdict": "INCORRECT_OR_MISSED"
+    "verdict": "SUCCESS"
   },
   {
     "index": 2,
@@ -42,26 +39,23 @@
       "behavior": "SUCCESSFUL_EXTRACTION"
     },
     "actual": {
-      "weight": 3.3,
-      "purity": 91.6,
-      "confidence": 0.95,
+      "weight": 25.68,
+      "purity": null,
+      "confidence": 0.75,
       "status": "HIGH_CONFIDENCE_DRAFT",
       "blur_variance": 1058.94,
       "is_blurry": false,
-      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "notice": "Draft reading only. Visual verification and human confirmation required before saving.",
+      "raw_ocr_snippet": "METTLER TOLECO \u00bb PRECISION GOLD BALANCE Max 200g \u20ac=C.0C4\n@sTaB.e\n\" 25.680\nbd g\nZo Tae\n\nMETTLER TOLECO \u00bb PRECISION GOLD BALANCE Max 200g \u00a30.00\neo sTeBe\n\" 25.680\nbd g\n* Zh0 Tae\n\nMETTLER 7 OLEGCO + PRECI",
       "extracted_fields": {
-        "raw_input_length": 257954,
-        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
-        "image_metadata": {
-          "format": "PNG",
-          "width": 640,
-          "height": 420,
-          "mode": "RGB",
-          "blur_variance": 1058.94
-        }
+        "document_type": "DIGITAL_WEIGHING_SCALE",
+        "detected_weight_token": "25.680 g (digital scale)",
+        "blur_variance": 1058.94,
+        "is_blurry": false,
+        "raw_ocr_text": "METTLER TOLECO \u00bb PRECISION GOLD BALANCE Max 200g \u20ac=C.0C4\n@sTaB.e\n\" 25.680\nbd g\nZo Tae\n\nMETTLER TOLECO \u00bb PRECISION GOLD BALANCE Max 200g \u00a30.00\neo sTeBe\n\" 25.680\nbd g\n* Zh0 Tae\n\nMETTLER 7 OLEGCO + PRECISION GOLG BALANCE flax 300g d=C.C01\n@ ST-E.E 2\n\u201cEt\n5.680 ,\nZERO\u201d TARE\n\nM a CO+P \"5 \" P 9 9 fla d=C.0C4"
       }
     },
-    "verdict": "INCORRECT_OR_MISSED"
+    "verdict": "SUCCESS"
   },
   {
     "index": 3,
@@ -74,26 +68,23 @@
       "behavior": "SUCCESSFUL_EXTRACTION"
     },
     "actual": {
-      "weight": 3.3,
-      "purity": 91.6,
-      "confidence": 0.95,
+      "weight": 8.125,
+      "purity": null,
+      "confidence": 0.75,
       "status": "HIGH_CONFIDENCE_DRAFT",
       "blur_variance": 1027.42,
       "is_blurry": false,
-      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "notice": "Draft reading only. Visual verification and human confirmation required before saving.",
+      "raw_ocr_snippet": "= 8.125\n. g\n\n= 8.125\n. g\n\nMETTLER TOLEDO \u00bb PRECISION GOLD BALANCE iax 30lg d=C.CC4\n@ STSELE\n\" 8.125\nbd g\n(ZERO, TARE\n\nM ~ , LEGO + - \" 1 5 hla d=C.CC4",
       "extracted_fields": {
-        "raw_input_length": 256807,
-        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
-        "image_metadata": {
-          "format": "PNG",
-          "width": 640,
-          "height": 420,
-          "mode": "RGB",
-          "blur_variance": 1027.42
-        }
+        "document_type": "DIGITAL_WEIGHING_SCALE",
+        "detected_weight_token": "8.125 g (digital scale)",
+        "blur_variance": 1027.42,
+        "is_blurry": false,
+        "raw_ocr_text": "= 8.125\n. g\n\n= 8.125\n. g\n\nMETTLER TOLEDO \u00bb PRECISION GOLD BALANCE iax 30lg d=C.CC4\n@ STSELE\n\" 8.125\nbd g\n(ZERO, TARE\n\nM ~ , LEGO + - \" 1 5 hla d=C.CC4"
       }
     },
-    "verdict": "INCORRECT_OR_MISSED"
+    "verdict": "SUCCESS"
   },
   {
     "index": 4,
@@ -106,26 +97,23 @@
       "behavior": "SUCCESSFUL_EXTRACTION"
     },
     "actual": {
-      "weight": 3.3,
-      "purity": 91.6,
-      "confidence": 0.95,
+      "weight": 15.3,
+      "purity": null,
+      "confidence": 0.75,
       "status": "HIGH_CONFIDENCE_DRAFT",
       "blur_variance": 459.98,
       "is_blurry": false,
-      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "notice": "Draft reading only. Visual verification and human confirmation required before saving.",
+      "raw_ocr_snippet": "\u2014 mN\n\nf \u2018\n\n\\ }\n\n\\ /\n\nMETTLER ICLEDO + PRECISION GOLD BALAHICE Max Aig deG G0\n. 300\ni\n\"ZERO\n\nORE.\n\n \u2014 NN\n\nf \u2018\n\n\\ }\n\n\\ /\n\nMETTLER ICLEDO + PRECISION GOLD BALATICE Wax Aig deG G0\n: . 300\ni\n\"ZERO\n\nORE.\n\nW",
       "extracted_fields": {
-        "raw_input_length": 217931,
-        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
-        "image_metadata": {
-          "format": "PNG",
-          "width": 640,
-          "height": 420,
-          "mode": "RGB",
-          "blur_variance": 459.98
-        }
+        "document_type": "DIGITAL_WEIGHING_SCALE",
+        "detected_weight_token": "15.300 g (digital scale)",
+        "blur_variance": 459.98,
+        "is_blurry": false,
+        "raw_ocr_text": "\u2014 mN\n\nf \u2018\n\n\\ }\n\n\\ /\n\nMETTLER ICLEDO + PRECISION GOLD BALAHICE Max Aig deG G0\n. 300\ni\n\"ZERO\n\nORE.\n\n \u2014 NN\n\nf \u2018\n\n\\ }\n\n\\ /\n\nMETTLER ICLEDO + PRECISION GOLD BALATICE Wax Aig deG G0\n: . 300\ni\n\"ZERO\n\nORE.\n\nWETTER OLE + PREC SIGN TAU BAL\na 15.300\nZERO \u2014"
       }
     },
-    "verdict": "INCORRECT_OR_MISSED"
+    "verdict": "SUCCESS"
   },
   {
     "index": 5,
@@ -138,26 +126,22 @@
       "behavior": "SUCCESSFUL_EXTRACTION_OR_WARNING"
     },
     "actual": {
-      "weight": 3.3,
-      "purity": 91.6,
-      "confidence": 0.95,
-      "status": "HIGH_CONFIDENCE_DRAFT",
+      "weight": null,
+      "purity": null,
+      "confidence": 0.25,
+      "status": "LOW_CONFIDENCE_MANUAL_REQUIRED",
       "blur_variance": 77.56,
       "is_blurry": false,
-      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "notice": "Draft reading only. Visual verification and human confirmation required before saving.",
+      "raw_ocr_snippet": "al",
       "extracted_fields": {
-        "raw_input_length": 165099,
-        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
-        "image_metadata": {
-          "format": "PNG",
-          "width": 640,
-          "height": 420,
-          "mode": "RGB",
-          "blur_variance": 77.56
-        }
+        "document_type": "DIGITAL_WEIGHING_SCALE",
+        "blur_variance": 77.56,
+        "is_blurry": false,
+        "raw_ocr_text": "al"
       }
     },
-    "verdict": "INCORRECT_OR_MISSED"
+    "verdict": "SUCCESSFUL_UNCERTAINTY_WARNING"
   },
   {
     "index": 6,
@@ -172,26 +156,21 @@
     "actual": {
       "weight": null,
       "purity": null,
-      "confidence": 0.2,
+      "confidence": 0.15,
       "status": "LOW_CONFIDENCE_MANUAL_REQUIRED",
       "blur_variance": 1.03,
       "is_blurry": true,
-      "notice": "Draft reading uncertain due to image blur. Manual verification strictly required.",
+      "notice": "Draft reading uncertain due to image blur or poor contrast. Manual verification strictly required.",
+      "raw_ocr_snippet": "",
       "extracted_fields": {
-        "error": "Image blur or illegible slip detected",
+        "blur_variance": 1.03,
+        "is_blurry": true,
+        "image_quality_warning": "Image severely blurred or obscured (Laplacian variance 1.03 < 20.0). Manual reading strictly required.",
         "manual_entry_required": true,
-        "image_metadata": {
-          "format": "PNG",
-          "width": 640,
-          "height": 420,
-          "mode": "RGB",
-          "blur_variance": 1.03,
-          "is_blurry": true
-        },
-        "image_quality_warning": "Image appears blurred or low-contrast (Laplacian variance < 50.0)"
+        "raw_ocr_text": ""
       }
     },
-    "verdict": "CORRECT_WARNING"
+    "verdict": "SUCCESSFUL_BLUR_REJECTION"
   },
   {
     "index": 7,
@@ -204,26 +183,24 @@
       "behavior": "SUCCESSFUL_EXTRACTION"
     },
     "actual": {
-      "weight": 3.3,
+      "weight": null,
       "purity": 91.6,
-      "confidence": 0.95,
+      "confidence": 0.75,
       "status": "HIGH_CONFIDENCE_DRAFT",
       "blur_variance": 3535.06,
       "is_blurry": false,
-      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "notice": "Draft reading only. Visual verification and human confirmation required before saving.",
+      "raw_ocr_snippet": "COIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: 2026-11-05 TIME: 11:42:12\n\nINSTRUYENT : OLYYBUS SOL9-XEERT\n\nOPERATOR: ASSAYER-04 {RAYESH}\n\nSAYBLE REF ; CU-ASSAY-2026-2212\n\nELEYENTAL",
       "extracted_fields": {
-        "raw_input_length": 366973,
-        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
-        "image_metadata": {
-          "format": "PNG",
-          "width": 540,
-          "height": 680,
-          "mode": "RGB",
-          "blur_variance": 3535.06
-        }
+        "document_type": "KARAT_METER_PRINTOUT",
+        "detected_purity_token": "91.60% (XRF Au line)",
+        "detected_karat_token": "22K",
+        "blur_variance": 3535.06,
+        "is_blurry": false,
+        "raw_ocr_text": "COIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: 2026-11-05 TIME: 11:42:12\n\nINSTRUYENT : OLYYBUS SOL9-XEERT\n\nOPERATOR: ASSAYER-04 {RAYESH}\n\nSAYBLE REF ; CU-ASSAY-2026-2212\n\nELEYENTAL SPECTRAL ANALYSTS\n\nAJ (GOLD) 1 91.60 %\n\nAG (SIWER} : 4.82 4\n\nCU (COPPPR] : 3.58 3\n\naN (ZINC: 9.99 8\n\nKARAT GRADE : 22K HALLMARK EQUIV\n\nPURITY TOUCH : 91.60%\n\nSTATUS: VERIFIED \u00a2 SEALED\n\nAUTH SIH:\n\nCOIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: 2026-11-05 TIME: 11:4a:12\n\nINSTRUYENT : OLYYBUS SOLI-XBERT\n\nOPERATOR: ASSAYER-04 {RAYESH}\n\nSAYBLE REF : CU-ASSAY-2026-2212\n\nELEYENTAL SPECTRAL ANALYSTS\n\nAJ (GOLD) 1 91.60 %\n\nAG (SIWER} : 4.82 4\n\nSU (COPPPR] : 3.58 3\n\naN (ZINC] : 9.99 8\n\nKARAT GRADE : 22K HALLMARK EQUIV\n\nPURITY TOUCH : 91.60%\n\nSTATUS: VERIFIED \u00a2 SEALED\n\nAUTH SIH:\n\nCOIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nORIE: CILS-Li-35 TIME; 22:42:22\n\nSRSTROMENT \u00a7 SLYMPOS GOLIANFERZ\n\nOPIRATOR : ASSAYIR-IS [RAMESH\n\nSRMPFLE RET : TO-KSSAY-LI2g-3222\n\nTLIMENTAL IFIOTRAL ARALYSIS:\n\nAJ (GOLD) : 91.60 %\n\nBG (SILVER 2 4.82%\n\nZN ZINC: f Sac. %\n\nKARAT GRADE : 22K HALLMARK EQUIV\n\nPURITY TOUCH : 91.634\n\nSTATUS: VERIFIED 2 SERLED\n\n- _"
       }
     },
-    "verdict": "PARTIAL"
+    "verdict": "SUCCESS"
   },
   {
     "index": 8,
@@ -236,26 +213,24 @@
       "behavior": "SUCCESSFUL_EXTRACTION"
     },
     "actual": {
-      "weight": 3.3,
-      "purity": 91.6,
-      "confidence": 0.95,
+      "weight": null,
+      "purity": 75.0,
+      "confidence": 0.75,
       "status": "HIGH_CONFIDENCE_DRAFT",
       "blur_variance": 3519.2,
       "is_blurry": false,
-      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "notice": "Draft reading only. Visual verification and human confirmation required before saving.",
+      "raw_ocr_snippet": "COIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: 2026-11-05 TIME: 11:4a:12\n\nINSTRUYENT : OLYYBUS SOL9-XBERT\n\nOPERATOR: ASSAYER-04 ;RAYESH}\n\nSAUBLE REF : CJ-ASSAY-2026-2212\n\nELEYENTAL",
       "extracted_fields": {
-        "raw_input_length": 366761,
-        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
-        "image_metadata": {
-          "format": "PNG",
-          "width": 540,
-          "height": 680,
-          "mode": "RGB",
-          "blur_variance": 3519.2
-        }
+        "document_type": "KARAT_METER_PRINTOUT",
+        "detected_purity_token": "75.00% (XRF Au line)",
+        "detected_karat_token": "18K",
+        "blur_variance": 3519.2,
+        "is_blurry": false,
+        "raw_ocr_text": "COIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: 2026-11-05 TIME: 11:4a:12\n\nINSTRUYENT : OLYYBUS SOL9-XBERT\n\nOPERATOR: ASSAYER-04 ;RAYESH}\n\nSAUBLE REF : CJ-ASSAY-2026-2212\n\nELEYENTAL SPECTRAL ANALYSTS\n\nAY (GOLD) 1 75.00 %\n\nAG (STWER} : 4.82 4\n\nCU (COPPPR] : 3.58 4\n\naw (ZINC): 9.99 8\n\nKARAT GRADE : 18K HALLMARK EQUIV\n\nPURITY TOUCA : 75.00%\n\nSTATUS: VERIFIED \u00a2 SEALED\n\nARTA STON:\n\nCOIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: 2026-11-05 TIME: 11:4a:12\n\nINSTRUYENT : SLYYBUS SOL9-XBERT\n\nOPERATOR: ASSAYER-04 ;RAYESH}\n\nSAYBLE REF : CJ-ASSAY-2026-2212\n\nELEYENTAL SPECTRAL ANALYSTS\n\nAY (GOLD) 1 75.00 %\n\nAG (STWZR} : 4.82 4\n\nCU (COPPPR] : 3.58 3\n\naw (ZINC): 9.99 8\n\nKARAT GRADE : 18K HALLMARK EQUIV\n\nPURITY TOUCA : 75.00%\n\nSTATUS: VERIFIED \u00a2 SEALED\n\nAUTH STON:\n\nCOIMBATORE PRECISION ASSAY LAB\n\u201cRF COLD SPECTROMETER REEORT\n\nDRIE: QIQS-LL-1S 0 TIME: Li:42sl2\n\nINSTRIMENT 1 CLYMEOS GOLI-KPERT\n\nOPERATOR 0: RSSAYER-1S |RRMESE)\n\nSAMZLE REF 1 CI-RSSAY-2IL6-2212\n\nELEMENTAL SFICTRAL ANALYSIS:\n\nAJ (GOLD) : 75.00 4%\n\nRE (SILVER: oo: 4.614\n\nCY icOPEERL oo: 3.36 4\n\nKARAT GRADE : 18K HALLMARK EQUIV\n\nPURITY TOUCH : 75.99%\n\nSTATUS: VERIFIED s SEALED"
       }
     },
-    "verdict": "INCORRECT_OR_MISSED"
+    "verdict": "SUCCESS"
   },
   {
     "index": 9,
@@ -268,26 +243,24 @@
       "behavior": "SUCCESSFUL_EXTRACTION"
     },
     "actual": {
-      "weight": 3.3,
-      "purity": 91.6,
-      "confidence": 0.95,
+      "weight": null,
+      "purity": 83.33,
+      "confidence": 0.75,
       "status": "HIGH_CONFIDENCE_DRAFT",
       "blur_variance": 3533.56,
       "is_blurry": false,
-      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "notice": "Draft reading only. Visual verification and human confirmation required before saving.",
+      "raw_ocr_snippet": "COIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: 2026-11-05 TIME: 1:42:12\n\nINSTRUYENT : OLYYBUS SOL-KBERT\n\nOPERATOR: ASSAYER-04 ;RAYESH!\n\nSAYBLE REF : CJ-ASSRY-2026-2812\n\nELEYENTAL S",
       "extracted_fields": {
-        "raw_input_length": 366072,
-        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
-        "image_metadata": {
-          "format": "PNG",
-          "width": 540,
-          "height": 680,
-          "mode": "RGB",
-          "blur_variance": 3533.56
-        }
+        "document_type": "KARAT_METER_PRINTOUT",
+        "detected_purity_token": "83.33% (XRF Au line)",
+        "detected_karat_token": "20K",
+        "blur_variance": 3533.56,
+        "is_blurry": false,
+        "raw_ocr_text": "COIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: 2026-11-05 TIME: 1:42:12\n\nINSTRUYENT : OLYYBUS SOL-KBERT\n\nOPERATOR: ASSAYER-04 ;RAYESH!\n\nSAYBLE REF : CJ-ASSRY-2026-2812\n\nELEYENTAL SPECTRAL 2NRLYSTS\n\nAY (GOLD) 1 83.33 %\n\nAG (STWER] : 4.82 4\n\nCU (COPPPR] : 3.58 %\n\naN (ZINC] \u2014: 9.99 8\n\nKARAT GRADE : 20K HALLMARK EQUIV\n\nPURITY TOUCH : 33.33%\n\nSTATUS: VERIFIED \u00a2 SEALED\n\nAUTH SIU:\n\nCOIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: 2026-11-05 TIME: 11:42:12\n\nINSTRUYENT ; OLYYBUS SOLI-XBERT\n\nOPERATOR: ASSAYER-04 ;RAYESH!\n\nSAYBLE REF : CJ-ASSRY-2026-2812\n\nELEYENTAL SPECTRAL ANRLYSTS\n\nAY (GOLD) 1 83.33 %\n\nAG (STWER] : 4.82 4\n\nCU (COPPPR] : 3.58 %\n\naN (ZINC: 9.99 8\n\nKARAT GRADE : 20K HALLMARK EQUIV\n\nPURITY TOUCH : 33.33%\n\nSTATUS: VERIFIED \u00a2 SEALED\n\nAUTH SIU:\n\nCOIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: TIQS-LL-1S 0 TIME: Li:goile\n\nINSTRUMENT 1 OLYMPOS GOLI-RPERT\n\nOPERRTOR 0: ASSAYER-1S :RAMESE)\n\nSAMZLE REF 1 CO-RSSAY-LIDE-2510\n\nELEMENTAL SEECTRAL ANALYSIS:\n\nAJ (GOLD) : 83.33 4%\n\nRG (SILVERE oo: 3.61 4\n\nCY icCPEER: oo: 3.36 4%\n\nBN {ZINC} Pore\n\nKARAT GRADE : 20K HALLMARK EQUIV\n\nPURITY TOUCH : 83.33%\n\nSTATUS: VERIFIED s SERLEL\n\n- _"
       }
     },
-    "verdict": "INCORRECT_OR_MISSED"
+    "verdict": "SUCCESS"
   },
   {
     "index": 10,
@@ -300,26 +273,25 @@
       "behavior": "SUCCESSFUL_EXTRACTION"
     },
     "actual": {
-      "weight": 3.3,
+      "weight": 50.0,
       "purity": 91.6,
-      "confidence": 0.95,
+      "confidence": 0.98,
       "status": "HIGH_CONFIDENCE_DRAFT",
       "blur_variance": 4016.06,
       "is_blurry": false,
-      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "notice": "Draft reading only. Visual verification and human confirmation required before saving.",
+      "raw_ocr_snippet": "COIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: 2026-11-95 TRE: lisa2is\n\nINSTRUYENT ; OLYYBUS GOLD-XPERT\n\nOPERATOR; ASSAYER-04 :RAYESH}\n\nSAYPLE REF ; CJ-ASSAY-2026-8812\n\nGROSS WEIGH",
       "extracted_fields": {
-        "raw_input_length": 369207,
-        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
-        "image_metadata": {
-          "format": "PNG",
-          "width": 540,
-          "height": 680,
-          "mode": "RGB",
-          "blur_variance": 4016.06
-        }
+        "document_type": "KARAT_METER_PRINTOUT",
+        "detected_weight_token": "50.000 g (Assay Slip)",
+        "detected_purity_token": "91.60% (XRF Au line)",
+        "detected_karat_token": "22K",
+        "blur_variance": 4016.06,
+        "is_blurry": false,
+        "raw_ocr_text": "COIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: 2026-11-95 TRE: lisa2is\n\nINSTRUYENT ; OLYYBUS GOLD-XPERT\n\nOPERATOR; ASSAYER-04 :RAYESH}\n\nSAYPLE REF ; CJ-ASSAY-2026-8812\n\nGROSS WEIGHT : 50.000 g\n\nTARE WEIGAT \u00ab=: 9.993 g\n\nWET WEIGAT : 50.009 g\n\nELEYENTAL SPECTRAL ANALYSES\n\nAU (GOLD) : 91.60 &\n\nAG (SILVER): 4.82 3\n\nCU (COPPERI : 3.53%\n\naN (ZINC): 9.99 4%\n\nKARAT GRADE : 22K HALLMARK EQUIV\n\nPURITY TOUCH : 91.608\n\nSTATUS: VERIFIED \u00a9 SEALED\n\nANTA STH:\n\nCOIMBATORE PRECISION ASSAY LAB\nXRF GOLD SPECTROMETER REPORT\n\nDATE: 2026-11-95 TIDE: lisa2i1s\n\nINSTRUYENT ; OLYYBUS GOLD-XPERT\n\nOPERATOR; ASSAYER-04 :RAYESH}\n\nSAYPLE REF ; CJ-ASSAY-2026-8812\n\nGROSS WEIGHT : 50.000 g\n\nTARE WEIGAT 2 9.993 g\n\nWET WEIGAT : 50.009 g\n\nELEYENTAL SPECTRAL ANALYSES\n\nAU (GOLD) : 91.60 &\n\nAG (SILVER): 4.82 4\n\nCU (COPPERI : 3.53%\n\naN (ZINC): 9.99 4%\n\nKARAT GRADE : 22K HALLMARK EQUIV\n\nPURITY TOUCH : 91.608\n\nSTATUS: VERIFIED \u00a9 SEALED\n\nAOTA STH:\n\nCOIMBATORE PRECISION ASSAY LAB\nXRF COLD SPECTROMETER REPORT\n\nDATE: QIGS-LL-1S 0 TIME: Li:g2:23\n\nINSTRUMENT 1 OLYMPOS GOLI-KPERT\n\nCFERRTOR 0: ASSAYER-I4 (RAMESH)\n\nSRMELE REF : CO-RSSRY-LI16-2212\n\nGROSS WEIGHT : 50.990 g\n\nTARE WEIGHT oo: 2.900 9\n\nNEI WIGHT 6: 59.999 g\n\nAJ (GOLD) : 91.60 8\n\nRG (SILVERD oo: 4.82 4\n\nCY icOERER oo: 2.36 4\n\n2M {ZINC} P02 4\n\nKARAT GRADE : 22K HALLMARK EQUIV\n\nPURITY TOUCH : 91.69%\n\nSTATUS: VERIFIED s SERLED\n\n7 | _"
       }
     },
-    "verdict": "PARTIAL"
+    "verdict": "SUCCESS"
   },
   {
     "index": 11,
@@ -332,26 +304,24 @@
       "behavior": "SUCCESSFUL_EXTRACTION_OR_WARNING"
     },
     "actual": {
-      "weight": 3.3,
+      "weight": null,
       "purity": 91.6,
-      "confidence": 0.95,
+      "confidence": 0.75,
       "status": "HIGH_CONFIDENCE_DRAFT",
       "blur_variance": 843.03,
       "is_blurry": false,
-      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "notice": "Draft reading only. Visual verification and human confirmation required before saving.",
+      "raw_ocr_snippet": "aS (Gon?) + gi 60 %\nMARAT GRADE 1 22K paLLMeet gouty\nportT\u00ae ouch * gi 60%\ngtT05* gentFTeP * ggxikD\nwre 8\n\naS (Gon?) + gi .60 %\nMARAT GRADE 1 22K paLLMet gouty\npoutT\u00ae ouch * gi 60%\ngtNTS* gen tFTeP * g",
       "extracted_fields": {
-        "raw_input_length": 288804,
-        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
-        "image_metadata": {
-          "format": "PNG",
-          "width": 540,
-          "height": 680,
-          "mode": "RGB",
-          "blur_variance": 843.03
-        }
+        "document_type": "DIGITAL_WEIGHING_SCALE",
+        "detected_karat_token": "22K",
+        "purity_inferred_from_karat": "22K (91.60%)",
+        "blur_variance": 843.03,
+        "is_blurry": false,
+        "raw_ocr_text": "aS (Gon?) + gi 60 %\nMARAT GRADE 1 22K paLLMeet gouty\nportT\u00ae ouch * gi 60%\ngtT05* gentFTeP * ggxikD\nwre 8\n\naS (Gon?) + gi .60 %\nMARAT GRADE 1 22K paLLMet gouty\npoutT\u00ae ouch * gi 60%\ngtNTS* gen tFTeP * ggxikD\nwre\n\ngtht23\" pgRitte\u00ae * seni\nan ae"
       }
     },
-    "verdict": "PARTIAL"
+    "verdict": "SUCCESS"
   },
   {
     "index": 12,
@@ -364,26 +334,22 @@
       "behavior": "PARTIAL_EXTRACTION_WARNING"
     },
     "actual": {
-      "weight": 3.3,
-      "purity": 91.6,
-      "confidence": 0.95,
-      "status": "HIGH_CONFIDENCE_DRAFT",
+      "weight": null,
+      "purity": null,
+      "confidence": 0.15,
+      "status": "LOW_CONFIDENCE_MANUAL_REQUIRED",
       "blur_variance": 11.65,
       "is_blurry": true,
-      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "notice": "Draft reading uncertain due to image blur or poor contrast. Manual verification strictly required.",
+      "raw_ocr_snippet": "",
       "extracted_fields": {
-        "raw_input_length": 169111,
-        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
-        "image_metadata": {
-          "format": "PNG",
-          "width": 540,
-          "height": 680,
-          "mode": "RGB",
-          "blur_variance": 11.65,
-          "is_blurry": true
-        }
+        "blur_variance": 11.65,
+        "is_blurry": true,
+        "image_quality_warning": "Image severely blurred or obscured (Laplacian variance 11.65 < 20.0). Manual reading strictly required.",
+        "manual_entry_required": true,
+        "raw_ocr_text": ""
       }
     },
-    "verdict": "INCORRECT_OR_MISSED"
+    "verdict": "SUCCESSFUL_PARTIAL_WARNING"
   }
 ]

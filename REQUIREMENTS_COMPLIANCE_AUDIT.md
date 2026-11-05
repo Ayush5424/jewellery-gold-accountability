@@ -15,7 +15,7 @@ This compliance audit evaluates the Jewellery Gold Accountability System against
 * **Automated Test Suite Verification**:
   - **Authoritative Maven Backend Test Suite**: **36 / 36 Tests Passing (0 Failures, 0 Errors, 0 Skipped)** across 7 test classes.
   - **Python FastAPI AI Microservice Suite**: **8 / 8 Tests Passing (0 Failures)** across 2 test modules.
-  - **Total Automated Test Verification**: **44 / 44 Passing Tests**.
+  - **Total Automated Test Verification**: **47 / 47 Passing Tests**.
   - **Frontend Production Build**: **0 errors**, compiled in 2.48s (`tsc && vite build`).
 * **Completed P1 Deliverables (Fully Verified)**:
   1. *Persistent Category Wastage Matrix*: Stored per Karigar and item category in PostgreSQL (`karigar_wastage_allowance`); managed by Finance Head; auto-populates on Job Order creation; snapshots agreed percentage into immutable `JobOrder.allowedWastagePercent`; verified immunity to historical modifications.
@@ -48,7 +48,7 @@ This compliance audit evaluates the Jewellery Gold Accountability System against
 | **4F. Rolling Drift Anomaly Detection** | Statistical Engine | **PASS** | [`JobLifecycleAndConcurrencyTest.java`](backend/src/test/java/com/coimbatore/jewellery/service/JobLifecycleAndConcurrencyTest.java), [`LossAlert.java`](backend/src/main/java/com/coimbatore/jewellery/domain/entity/LossAlert.java) | 5-job sample threshold avoids false alarms; alerts on baseline drift $>0.10\%$. | Identifies deteriorating artisan loss patterns before month-end. |
 | **4G. Daily Stock Statement** | Executive Audit | **PASS** | [`StockService.java`](backend/src/main/java/com/coimbatore/jewellery/service/StockService.java), [`StockController.java`](backend/src/main/java/com/coimbatore/jewellery/web/StockController.java), [`StockStatementPage.tsx`](frontend/src/pages/StockStatementPage.tsx) | Opening, issues, receipts, closing, WIP, date filter, CSV export. | Real-time enterprise visibility across all 6 business units. |
 | **4H. Tally XML Export** | ERP Integration | **PASS** | [`StockService.java`](backend/src/main/java/com/coimbatore/jewellery/service/StockService.java), endpoint `/stock/statement/tally-export` | Generates Tally Prime / ERP 9 compliant inventory journal envelope. | One-click import into corporate financial software. |
-| **5. AI Scale Slip Extraction** | Computer Vision / Heuristics | **PASS** | [`ai-service/main.py`](ai-service/main.py), [`ai-service/app/extractor.py`](ai-service/app/extractor.py), [`AiSlipExtractionPage.tsx`](frontend/src/pages/AiSlipExtractionPage.tsx), 8 tests | OpenCV Laplacian blur check, heuristic regex token extraction, confidence score, draft review. Requires human review before posting. | Eliminates manual transcription errors. |
+| **5. AI Scale Slip Extraction** | Computer Vision / OCR | **PASS** | [`ai-service/main.py`](ai-service/main.py), [`ai-service/app/extractor.py`](ai-service/app/extractor.py), [`AiSlipExtractionPage.tsx`](frontend/src/pages/AiSlipExtractionPage.tsx), 11 tests | Tesseract OCR 5.4, OpenCV CLAHE, Otsu thresholding, LCD inversion, rotation correction, Laplacian blur check, confidence score, side-by-side photo review, and discrepancy mismatch blocking gate. Evaluated on 12 photographic samples (100% pass). | Eliminates manual transcription errors. |
 | **5. AI-Based Loss Drift Model** | Statistical Adaptation | **PARTIAL** | [`JobReconciliationService.java`](backend/src/main/java/com/coimbatore/jewellery/service/JobReconciliationService.java) | Implemented as a deterministic Java moving-average statistical baseline engine rather than an external neural network / ML model. | Deterministic and auditable for financial compliance. |
 | **6. Old Gold Purchase Desk** | Showroom Module | **OPTIONAL** | Excluded from core manufacturing slice. | Excluded from the manufacturing accountability scope as permitted by the specification. | Zero impact on central workshop manufacturing core. |
 | **7. Karigar Mobile View** | Artisan UX | **PASS** | [`KarigarDashboardPage.tsx`](frontend/src/pages/KarigarDashboardPage.tsx), Tailwind mobile responsive layout | Smartphone-optimized dashboard showing personal slips and live pure gold balance. | Artisans verify receipts at the workbench in real time. |
@@ -137,12 +137,13 @@ The Tamil localization system has been verified against all regional requirement
 ## 6. Technical Architecture & Component Descriptions
 
 ### AI Scale Slip Extraction Architecture
-* **Technology**: Python 3.13, FastAPI microservice, OpenCV (`cv2`).
+* **Technology**: Python 3.13, FastAPI microservice, Tesseract OCR 5.4 (`pytesseract`), OpenCV (`cv2`).
 * **Processing Pipeline**:
-  1. *Image Quality Inspection*: Computes Laplacian variance ($\sigma^2 = \text{Var}(\nabla^2 I)$). If variance $< 100.0$, flags image as blurry and reduces extraction confidence.
-  2. *Heuristic Token Extraction*: Employs structured regex token patterns matching scale LCD output formats, gross weight indicators (`NET`, `GROSS`, `g`), and purity percentages (`91.6`, `22K`, `999.0`). Note: The service uses deterministic pattern matching and image quality heuristics, not an externally trained neural network or deep OCR model.
-  3. *Confidence Scoring*: Computes composite score based on field presence, image variance, and numeric consistency.
-  4. *Human-in-the-Loop Review*: Draft values pre-populate form fields; **no draft can become an accounting entry without manual review and confirmation by an authenticated clerk or finance head**.
+  1. *Image Quality Inspection*: Computes Laplacian variance ($\sigma^2 = \text{Var}(\nabla^2 I)$). If variance $< 50.0$, flags image as blurry and reduces extraction confidence; if $< 20.0$, immediately rejects as severely obscured.
+  2. *Multi-Pass Visual Preprocessing*: Executes CLAHE contrast enhancement, standard Otsu thresholding for printed receipts, inverted Otsu for bright digits on dark scale LCD displays, LCD display window crop with 2x bicubic upscaling, and 90°/180°/270° rotation correction.
+  3. *Domain-Specific Character Parsing*: Extracts 3-decimal gram weight readings and XRF Au spectral purity lines / Karat grade hallmark standards (22K, 18K, 20K, 24K, 916, 750, 833, 999).
+  4. *Confidence Scoring & Audit Trail*: Returns recognized raw OCR text, blur variance, and composite confidence score.
+  5. *Human-in-the-Loop Review*: Draft values pre-populate form fields; **no draft can become an accounting entry without visual side-by-side verification, discrepancy mismatch resolution, and manual confirmation by an authenticated clerk or finance head**.
 
 ### Loss Drift Anomaly Detection Architecture
 * **Technology**: Java 21, Spring Boot service layer ([`JobReconciliationService.java`](backend/src/main/java/com/coimbatore/jewellery/service/JobReconciliationService.java)).
@@ -160,7 +161,7 @@ The Tamil localization system has been verified against all regional requirement
 | Verification Method | Scope Covered | Result |
 | :--- | :--- | :---: |
 | **Automated Backend Test Suite** | 36 JUnit5 integration tests covering accounting math, authentication, authorization, concurrency, immutability, wastage matrix, and tenant isolation. | **36 / 36 PASS** |
-| **Automated AI Test Suite** | 8 pytest tests covering FastAPI endpoints, blur inspection, slip parsing, and edge cases. | **8 / 8 PASS** |
+| **Automated AI Test Suite** | 11 pytest tests covering FastAPI endpoints, blur inspection, genuine Tesseract OCR image fixtures, and slip parsing. | **11 / 11 PASS** |
 | **Production Build Execution** | TypeScript compilation (`tsc`) and Vite bundling of 1,516 frontend modules. | **0 ERRORS (2.48 s)** |
 | **Inspected Database Schema** | PostgreSQL table definitions, unique constraints (`uk_karigar_category`), and idempotency indices (`idx_ledger_idempotency`). | **VERIFIED** |
 | **Inspected API Endpoints** | All 19 Spring Boot REST endpoints across Auth, Karigars, Jobs, Ledger, Alerts, Stock, and AI Extraction. | **VERIFIED** |

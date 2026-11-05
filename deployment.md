@@ -13,7 +13,7 @@ The **Jewellery Gold Accountability Platform** is a distributed, three-tier ente
 ### Component Architecture
 * **Frontend Web Application**: Single Page Application built with React 18, TypeScript, Tailwind CSS, Lucide icons, and Vite. Accessible by Finance Heads, Issue Clerks, and Karigars.
 * **Backend Core API & Accounting Engine**: Spring Boot 3.3 (Java 21), Spring Data JPA, Spring Security (JWT authentication), Hibernate, PostgreSQL 16+. Authoritative calculation of fine gold with zero floating-point arithmetic.
-* **AI Vision Extraction Service**: Python 3.13 FastAPI microservice with Pydantic schemas, OpenCV/PIL image processing, and regular expression pattern matching for draft extraction of scale slips.
+* **AI Vision Extraction Service**: Python 3.13 FastAPI microservice with Pydantic schemas, Tesseract OCR (`pytesseract`), and OpenCV multi-pass image preprocessing (CLAHE, Otsu thresholding, LCD inversion, Laplacian blur detection) for genuine pixel-level draft extraction from weighing scales and karat-meter printouts.
 * **Database**: PostgreSQL 16+ relational database enforcing referential integrity and auditability.
 * **Accounting Integration**: Native Tally ERP 9 / Tally Prime XML Stock Journal export format for automated tally inventory reconciliation.
 
@@ -29,6 +29,7 @@ Ensure the following runtimes and tools are installed on the deployment host:
 | **Apache Maven** | 3.8+ | 3.9+ | `mvn -v` |
 | **Node.js & npm** | Node 18+ / npm 9+ | Node 20 LTS | `node -v && npm -v` |
 | **Python** | Python 3.10+ | Python 3.12 / 3.13 | `python --version` |
+| **Tesseract OCR** | 5.0+ | 5.4+ with `eng.traineddata` | `tesseract --version` |
 | **PostgreSQL** | PostgreSQL 15+ | PostgreSQL 16 or 18 | `psql -U postgres -c "SELECT version();"` |
 | **Docker & Docker Compose** | Docker 24+ / Compose v2 | Latest Docker Desktop | `docker compose version` |
 
@@ -102,12 +103,22 @@ Ensure your local PostgreSQL server is active on port `5432`:
 Get-Service -Name postgresql* | Start-Service
 ```
 
-### Step 2: Start the AI Extraction Microservice (FastAPI)
-1. Navigate to the `ai-service` directory:
+### Step 2: Start the AI Extraction Microservice (FastAPI & Tesseract OCR)
+1. **Install Tesseract OCR**:
+   - **Windows**: Install Tesseract OCR 5.4+ (default path: `C:\Users\dell\tesseract-ocr\tesseract.exe` or `C:\Program Files\Tesseract-OCR\tesseract.exe`) with English traineddata (`eng.traineddata`). Set environment variables if using a custom location:
+     ```powershell
+     $env:TESSERACT_CMD = "C:\Users\dell\tesseract-ocr\tesseract.exe"
+     $env:TESSDATA_PREFIX = "C:\Users\dell\tesseract-ocr\tessdata"
+     ```
+   - **Linux / Docker**:
+     ```bash
+     sudo apt-get update && sudo apt-get install -y tesseract-ocr tesseract-ocr-eng libgl1 libglib2.0-0
+     ```
+2. Navigate to the `ai-service` directory:
    ```bash
    cd ai-service
    ```
-2. Create and activate a Python virtual environment:
+3. Create and activate a Python virtual environment:
    ```bash
    python -m venv venv
    # Windows:
@@ -115,19 +126,19 @@ Get-Service -Name postgresql* | Start-Service
    # Linux/macOS:
    source venv/bin/activate
    ```
-3. Install dependencies:
+4. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-4. Run automated tests to verify image processing and regex extraction:
+5. Run automated tests to verify OCR image preprocessing and API endpoints:
    ```bash
    python -m pytest tests/
    ```
-5. Start the FastAPI server on port 8000:
+6. Start the FastAPI server on port 8000:
    ```bash
    uvicorn main:app --host 0.0.0.0 --port 8000 --reload
    ```
-   *Health Check*: Visit `http://localhost:8000/health` (should return `{"status":"UP","service":"ai-slip-extractor"}`).
+   *Health Check*: Visit `http://localhost:8000/health` (should return `{"status":"HEALTHY","service":"gold-slip-ai-extractor","ocr_engine":"Tesseract OCR"}`).
 
 ### Step 3: Start the Backend Core Service (Spring Boot)
 1. Navigate to the `backend` directory:

@@ -1,10 +1,13 @@
 """
-Jewellery Gold Accountability ?" AI Slip Extraction Microservice
-FastAPI application providing draft weight and purity reading from weighing balance slips.
+Jewellery Gold Accountability — AI Slip Extraction Microservice
+FastAPI application providing OCR-driven draft weight and purity readings
+from weighing balance slips and digital scale displays.
 """
 
 import os
 from pathlib import Path
+from typing import Optional, List
+import io
 
 # Automatically load environment variables from root .env if present
 try:
@@ -19,16 +22,14 @@ except ImportError:
 
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional, List
-import io
 
 from app.models import SlipExtractionResponse
 from app.extractor import SlipExtractor
 
 app = FastAPI(
     title="Jewellery Gold Slip AI Extraction Service",
-    description="Draft reader for Coimbatore jewellery workshop digital scale slips",
-    version="1.0.0"
+    description="Genuine Tesseract OCR reader for Coimbatore jewellery workshop weighing scales and karat meters",
+    version="2.0.0"
 )
 
 app.add_middleware(
@@ -41,76 +42,66 @@ app.add_middleware(
 
 @app.get("/health")
 def health_check():
-    return {"status": "HEALTHY", "service": "gold-slip-ai-extractor"}
+    return {"status": "HEALTHY", "service": "gold-slip-ai-extractor", "ocr_engine": "Tesseract OCR"}
 
 @app.post("/extract-slip", response_model=SlipExtractionResponse)
-def extract_slip(
+async def extract_slip(
     file: Optional[UploadFile] = File(None),
     text_hint: Optional[str] = Form(None)
 ):
-    raw_content = ""
-    filename = None
-    image_metadata = {}
+    """
+    Extracts draft weight and gold purity from uploaded scale/assay photos.
+    Uses pixel-level Tesseract OCR and OpenCV preprocessing.
+    Compliance: AI readings are drafts only; human confirmation is mandatory.
+    """
+    weight = None
+    purity = None
+    confidence = 0.0
+    fields = {}
 
     if file:
-        filename = file.filename
-        try:
-            content_bytes = file.file.read()
-            # Check if it's an image via PIL
-            try:
-                from PIL import Image
-                img = Image.open(io.BytesIO(content_bytes))
-                image_metadata = {
-                    "format": img.format,
-                    "width": img.width,
-                    "height": img.height,
-                    "mode": img.mode,
-                }
-            except Exception:
-                pass
+        content_bytes = await file.read()
+        if content_bytes and len(content_bytes) > 0:
+            weight, purity, confidence, fields = SlipExtractor.extract_from_image(content_bytes)
+    elif text_hint:
+        weight, purity, confidence, fields = SlipExtractor.extract_from_text(text_hint)
+    else:
+        return SlipExtractionResponse(
+            weight=None,
+            purity=None,
+            confidence=0.0,
+            status="LOW_CONFIDENCE_MANUAL_REQUIRED",
+            notice="No image or slip text provided.",
+            requires_human_confirmation=True,
+            missing_fields=["weight", "purity"],
+            raw_ocr_text="",
+            extracted_fields={"error": "Empty request payload"}
+        )
 
-            # Check blur variance via OpenCV
-            try:
-                import numpy as np
-                import cv2
-                nparr = np.frombuffer(content_bytes, np.uint8)
-                img_cv = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-                if img_cv is not None:
-                    gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
-                    blur_var = float(cv2.Laplacian(gray, cv2.CV_64F).var())
-                    image_metadata["blur_variance"] = round(blur_var, 2)
-                    if blur_var < 50.0:
-                        image_metadata["is_blurry"] = True
-            except Exception:
-                pass
-
-            # Also attempt decoding text if it's a plain slip text/ascii format
-            raw_content = content_bytes.decode("utf-8", errors="ignore")
-        except Exception:
-            raw_content = ""
-
-    if text_hint:
-        raw_content = f"{raw_content} {text_hint}".strip()
-
-    weight, purity, confidence, fields = SlipExtractor.extract_from_text(raw_content, filename)
-    if image_metadata:
-        fields["image_metadata"] = image_metadata
-
-    # If the image was blurry and no benchmark match was found, flag confidence
-    if image_metadata.get("is_blurry") and "benchmark_dataset_matched" not in fields:
-        confidence = min(confidence, 0.35)
-        fields["image_quality_warning"] = "Image appears blurred or low-contrast (Laplacian variance < 50.0)"
-
+    # Determine missing fields
     missing_fields: List[str] = []
     if weight is None:
         missing_fields.append("weight")
     if purity is None:
         missing_fields.append("purity")
 
-    status = "HIGH_CONFIDENCE_DRAFT" if confidence >= 0.70 and weight is not None else "LOW_CONFIDENCE_MANUAL_REQUIRED"
-    notice = "Draft value only. Visual verification and human confirmation required before submission."
-    if image_metadata.get("is_blurry") and "benchmark_dataset_matched" not in fields:
-        notice = "Draft reading uncertain due to image blur. Manual verification strictly required."
+    is_blurry = fields.get("is_blurry", False)
+    manual_required = fields.get("manual_entry_required", False)
+
+    if is_blurry or manual_required or confidence < 0.70:
+        status = "LOW_CONFIDENCE_MANUAL_REQUIRED"
+    elif weight is not None or purity is not None:
+        status = "HIGH_CONFIDENCE_DRAFT"
+    else:
+        status = "LOW_CONFIDENCE_MANUAL_REQUIRED"
+
+    notice = "Draft reading only. Visual verification and human confirmation required before saving."
+    if is_blurry:
+        notice = "Draft reading uncertain due to image blur or poor contrast. Manual verification strictly required."
+    elif manual_required:
+        notice = "Slip could not be read with confidence. Manual entry required."
+
+    raw_ocr = fields.get("raw_ocr_text", "")
 
     return SlipExtractionResponse(
         weight=weight,
@@ -120,6 +111,7 @@ def extract_slip(
         notice=notice,
         requires_human_confirmation=True,
         missing_fields=missing_fields,
+        raw_ocr_text=raw_ocr,
         extracted_fields=fields
     )
 

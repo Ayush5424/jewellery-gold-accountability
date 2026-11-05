@@ -7,9 +7,10 @@ class SlipExtractionResponse(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0, description="Extraction confidence score from 0.0 to 1.0")
     status: str = Field(..., description="HIGH_CONFIDENCE_DRAFT or LOW_CONFIDENCE_MANUAL_REQUIRED")
     notice: str = Field(
-        "Draft reading only. The issue clerk must visually verify and confirm the weights prior to saving.",
+        "Draft reading only. Visual verification and human confirmation required before saving.",
         description="Operational advisory"
     )
     requires_human_confirmation: bool = Field(True, description="Strict rule: AI values require human confirmation")
     missing_fields: List[str] = Field(default_factory=list, description="Missing or uncertain fields")
+    raw_ocr_text: Optional[str] = Field(None, description="Recognized OCR text directly extracted from image")
     extracted_fields: Dict[str, Any] = Field(default_factory=dict, description="Detailed parsed tokens and cues")
