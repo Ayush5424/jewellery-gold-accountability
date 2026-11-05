@@ -1,0 +1,389 @@
+[
+  {
+    "index": 1,
+    "filename": "scale_01_clear_12_450g.png",
+    "category": "DIGITAL_WEIGHING_SCALE",
+    "image_condition": "CLEAR_SHARP",
+    "expected": {
+      "weight": 12.45,
+      "purity": null,
+      "behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    "actual": {
+      "weight": 3.3,
+      "purity": 91.6,
+      "confidence": 0.95,
+      "status": "HIGH_CONFIDENCE_DRAFT",
+      "blur_variance": 1045.46,
+      "is_blurry": false,
+      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "extracted_fields": {
+        "raw_input_length": 257923,
+        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
+        "image_metadata": {
+          "format": "PNG",
+          "width": 640,
+          "height": 420,
+          "mode": "RGB",
+          "blur_variance": 1045.46
+        }
+      }
+    },
+    "verdict": "INCORRECT_OR_MISSED"
+  },
+  {
+    "index": 2,
+    "filename": "scale_02_clear_25_680g.png",
+    "category": "DIGITAL_WEIGHING_SCALE",
+    "image_condition": "CLEAR_SHARP",
+    "expected": {
+      "weight": 25.68,
+      "purity": null,
+      "behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    "actual": {
+      "weight": 3.3,
+      "purity": 91.6,
+      "confidence": 0.95,
+      "status": "HIGH_CONFIDENCE_DRAFT",
+      "blur_variance": 1058.94,
+      "is_blurry": false,
+      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "extracted_fields": {
+        "raw_input_length": 257954,
+        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
+        "image_metadata": {
+          "format": "PNG",
+          "width": 640,
+          "height": 420,
+          "mode": "RGB",
+          "blur_variance": 1058.94
+        }
+      }
+    },
+    "verdict": "INCORRECT_OR_MISSED"
+  },
+  {
+    "index": 3,
+    "filename": "scale_03_clear_8_125g.png",
+    "category": "DIGITAL_WEIGHING_SCALE",
+    "image_condition": "CLEAR_SHARP",
+    "expected": {
+      "weight": 8.125,
+      "purity": null,
+      "behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    "actual": {
+      "weight": 3.3,
+      "purity": 91.6,
+      "confidence": 0.95,
+      "status": "HIGH_CONFIDENCE_DRAFT",
+      "blur_variance": 1027.42,
+      "is_blurry": false,
+      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "extracted_fields": {
+        "raw_input_length": 256807,
+        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
+        "image_metadata": {
+          "format": "PNG",
+          "width": 640,
+          "height": 420,
+          "mode": "RGB",
+          "blur_variance": 1027.42
+        }
+      }
+    },
+    "verdict": "INCORRECT_OR_MISSED"
+  },
+  {
+    "index": 4,
+    "filename": "scale_04_angled_15_300g.png",
+    "category": "DIGITAL_WEIGHING_SCALE",
+    "image_condition": "PERSPECTIVE_ANGLED",
+    "expected": {
+      "weight": 15.3,
+      "purity": null,
+      "behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    "actual": {
+      "weight": 3.3,
+      "purity": 91.6,
+      "confidence": 0.95,
+      "status": "HIGH_CONFIDENCE_DRAFT",
+      "blur_variance": 459.98,
+      "is_blurry": false,
+      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "extracted_fields": {
+        "raw_input_length": 217931,
+        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
+        "image_metadata": {
+          "format": "PNG",
+          "width": 640,
+          "height": 420,
+          "mode": "RGB",
+          "blur_variance": 459.98
+        }
+      }
+    },
+    "verdict": "INCORRECT_OR_MISSED"
+  },
+  {
+    "index": 5,
+    "filename": "scale_05_glare_45_200g.png",
+    "category": "DIGITAL_WEIGHING_SCALE",
+    "image_condition": "GLARE_SPECULAR_REFLECTION",
+    "expected": {
+      "weight": 45.2,
+      "purity": null,
+      "behavior": "SUCCESSFUL_EXTRACTION_OR_WARNING"
+    },
+    "actual": {
+      "weight": 3.3,
+      "purity": 91.6,
+      "confidence": 0.95,
+      "status": "HIGH_CONFIDENCE_DRAFT",
+      "blur_variance": 77.56,
+      "is_blurry": false,
+      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "extracted_fields": {
+        "raw_input_length": 165099,
+        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
+        "image_metadata": {
+          "format": "PNG",
+          "width": 640,
+          "height": 420,
+          "mode": "RGB",
+          "blur_variance": 77.56
+        }
+      }
+    },
+    "verdict": "INCORRECT_OR_MISSED"
+  },
+  {
+    "index": 6,
+    "filename": "scale_06_blurry_obscured.png",
+    "category": "DIGITAL_WEIGHING_SCALE",
+    "image_condition": "DEFOCUS_BLUR_AND_OCCLUSION",
+    "expected": {
+      "weight": 30.1,
+      "purity": null,
+      "behavior": "REJECTION_OR_BLUR_WARNING"
+    },
+    "actual": {
+      "weight": null,
+      "purity": null,
+      "confidence": 0.2,
+      "status": "LOW_CONFIDENCE_MANUAL_REQUIRED",
+      "blur_variance": 1.03,
+      "is_blurry": true,
+      "notice": "Draft reading uncertain due to image blur. Manual verification strictly required.",
+      "extracted_fields": {
+        "error": "Image blur or illegible slip detected",
+        "manual_entry_required": true,
+        "image_metadata": {
+          "format": "PNG",
+          "width": 640,
+          "height": 420,
+          "mode": "RGB",
+          "blur_variance": 1.03,
+          "is_blurry": true
+        },
+        "image_quality_warning": "Image appears blurred or low-contrast (Laplacian variance < 50.0)"
+      }
+    },
+    "verdict": "CORRECT_WARNING"
+  },
+  {
+    "index": 7,
+    "filename": "purity_01_clear_22k_9160.png",
+    "category": "KARAT_METER_PRINTOUT",
+    "image_condition": "CLEAR_SHARP",
+    "expected": {
+      "weight": null,
+      "purity": 91.6,
+      "behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    "actual": {
+      "weight": 3.3,
+      "purity": 91.6,
+      "confidence": 0.95,
+      "status": "HIGH_CONFIDENCE_DRAFT",
+      "blur_variance": 3535.06,
+      "is_blurry": false,
+      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "extracted_fields": {
+        "raw_input_length": 366973,
+        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
+        "image_metadata": {
+          "format": "PNG",
+          "width": 540,
+          "height": 680,
+          "mode": "RGB",
+          "blur_variance": 3535.06
+        }
+      }
+    },
+    "verdict": "PARTIAL"
+  },
+  {
+    "index": 8,
+    "filename": "purity_02_clear_18k_7500.png",
+    "category": "KARAT_METER_PRINTOUT",
+    "image_condition": "CLEAR_SHARP",
+    "expected": {
+      "weight": null,
+      "purity": 75.0,
+      "behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    "actual": {
+      "weight": 3.3,
+      "purity": 91.6,
+      "confidence": 0.95,
+      "status": "HIGH_CONFIDENCE_DRAFT",
+      "blur_variance": 3519.2,
+      "is_blurry": false,
+      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "extracted_fields": {
+        "raw_input_length": 366761,
+        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
+        "image_metadata": {
+          "format": "PNG",
+          "width": 540,
+          "height": 680,
+          "mode": "RGB",
+          "blur_variance": 3519.2
+        }
+      }
+    },
+    "verdict": "INCORRECT_OR_MISSED"
+  },
+  {
+    "index": 9,
+    "filename": "purity_03_clear_20k_8333.png",
+    "category": "KARAT_METER_PRINTOUT",
+    "image_condition": "CLEAR_SHARP",
+    "expected": {
+      "weight": null,
+      "purity": 83.33,
+      "behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    "actual": {
+      "weight": 3.3,
+      "purity": 91.6,
+      "confidence": 0.95,
+      "status": "HIGH_CONFIDENCE_DRAFT",
+      "blur_variance": 3533.56,
+      "is_blurry": false,
+      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "extracted_fields": {
+        "raw_input_length": 366072,
+        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
+        "image_metadata": {
+          "format": "PNG",
+          "width": 540,
+          "height": 680,
+          "mode": "RGB",
+          "blur_variance": 3533.56
+        }
+      }
+    },
+    "verdict": "INCORRECT_OR_MISSED"
+  },
+  {
+    "index": 10,
+    "filename": "slip_04_dual_weight_purity_50g_9160.png",
+    "category": "KARAT_METER_PRINTOUT",
+    "image_condition": "CLEAR_DUAL_READING",
+    "expected": {
+      "weight": 50.0,
+      "purity": 91.6,
+      "behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    "actual": {
+      "weight": 3.3,
+      "purity": 91.6,
+      "confidence": 0.95,
+      "status": "HIGH_CONFIDENCE_DRAFT",
+      "blur_variance": 4016.06,
+      "is_blurry": false,
+      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "extracted_fields": {
+        "raw_input_length": 369207,
+        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
+        "image_metadata": {
+          "format": "PNG",
+          "width": 540,
+          "height": 680,
+          "mode": "RGB",
+          "blur_variance": 4016.06
+        }
+      }
+    },
+    "verdict": "PARTIAL"
+  },
+  {
+    "index": 11,
+    "filename": "slip_05_rotated_poor_light.png",
+    "category": "KARAT_METER_PRINTOUT",
+    "image_condition": "ROTATED_AND_POOR_LIGHTING",
+    "expected": {
+      "weight": null,
+      "purity": 91.6,
+      "behavior": "SUCCESSFUL_EXTRACTION_OR_WARNING"
+    },
+    "actual": {
+      "weight": 3.3,
+      "purity": 91.6,
+      "confidence": 0.95,
+      "status": "HIGH_CONFIDENCE_DRAFT",
+      "blur_variance": 843.03,
+      "is_blurry": false,
+      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "extracted_fields": {
+        "raw_input_length": 288804,
+        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
+        "image_metadata": {
+          "format": "PNG",
+          "width": 540,
+          "height": 680,
+          "mode": "RGB",
+          "blur_variance": 843.03
+        }
+      }
+    },
+    "verdict": "PARTIAL"
+  },
+  {
+    "index": 12,
+    "filename": "slip_06_obscured_missing_purity.png",
+    "category": "KARAT_METER_PRINTOUT",
+    "image_condition": "PARTIALLY_OBSCURED_MISSING_PURITY",
+    "expected": {
+      "weight": 34.25,
+      "purity": null,
+      "behavior": "PARTIAL_EXTRACTION_WARNING"
+    },
+    "actual": {
+      "weight": 3.3,
+      "purity": 91.6,
+      "confidence": 0.95,
+      "status": "HIGH_CONFIDENCE_DRAFT",
+      "blur_variance": 11.65,
+      "is_blurry": true,
+      "notice": "Draft value only. Visual verification and human confirmation required before submission.",
+      "extracted_fields": {
+        "raw_input_length": 169111,
+        "benchmark_dataset_matched": "Clean_Scrap_Receipt_3.300g",
+        "image_metadata": {
+          "format": "PNG",
+          "width": 540,
+          "height": 680,
+          "mode": "RGB",
+          "blur_variance": 11.65,
+          "is_blurry": true
+        }
+      }
+    },
+    "verdict": "INCORRECT_OR_MISSED"
+  }
+]

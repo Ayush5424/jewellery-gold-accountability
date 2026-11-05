@@ -1,0 +1,116 @@
+{
+  "dataset_name": "Jewellery Gold Slip Photographic Test Fixtures",
+  "description": "Synthetic photographic test fixtures for digital weighing scales and karat-meter printouts",
+  "total_samples": 12,
+  "generator": "PIL + OpenCV Procedural Photographic Synthesizer",
+  "samples": [
+    {
+      "filename": "scale_01_clear_12_450g.png",
+      "category": "DIGITAL_WEIGHING_SCALE",
+      "expected_weight": 12.45,
+      "expected_purity": null,
+      "expected_unit": "g",
+      "image_condition": "CLEAR_SHARP",
+      "expected_behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    {
+      "filename": "scale_02_clear_25_680g.png",
+      "category": "DIGITAL_WEIGHING_SCALE",
+      "expected_weight": 25.68,
+      "expected_purity": null,
+      "expected_unit": "g",
+      "image_condition": "CLEAR_SHARP",
+      "expected_behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    {
+      "filename": "scale_03_clear_8_125g.png",
+      "category": "DIGITAL_WEIGHING_SCALE",
+      "expected_weight": 8.125,
+      "expected_purity": null,
+      "expected_unit": "g",
+      "image_condition": "CLEAR_SHARP",
+      "expected_behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    {
+      "filename": "scale_04_angled_15_300g.png",
+      "category": "DIGITAL_WEIGHING_SCALE",
+      "expected_weight": 15.3,
+      "expected_purity": null,
+      "expected_unit": "g",
+      "image_condition": "PERSPECTIVE_ANGLED",
+      "expected_behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    {
+      "filename": "scale_05_glare_45_200g.png",
+      "category": "DIGITAL_WEIGHING_SCALE",
+      "expected_weight": 45.2,
+      "expected_purity": null,
+      "expected_unit": "g",
+      "image_condition": "GLARE_SPECULAR_REFLECTION",
+      "expected_behavior": "SUCCESSFUL_EXTRACTION_OR_WARNING"
+    },
+    {
+      "filename": "scale_06_blurry_obscured.png",
+      "category": "DIGITAL_WEIGHING_SCALE",
+      "expected_weight": 30.1,
+      "expected_purity": null,
+      "expected_unit": "g",
+      "image_condition": "DEFOCUS_BLUR_AND_OCCLUSION",
+      "expected_behavior": "REJECTION_OR_BLUR_WARNING"
+    },
+    {
+      "filename": "purity_01_clear_22k_9160.png",
+      "category": "KARAT_METER_PRINTOUT",
+      "expected_weight": null,
+      "expected_purity": 91.6,
+      "expected_unit": "%",
+      "image_condition": "CLEAR_SHARP",
+      "expected_behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    {
+      "filename": "purity_02_clear_18k_7500.png",
+      "category": "KARAT_METER_PRINTOUT",
+      "expected_weight": null,
+      "expected_purity": 75.0,
+      "expected_unit": "%",
+      "image_condition": "CLEAR_SHARP",
+      "expected_behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    {
+      "filename": "purity_03_clear_20k_8333.png",
+      "category": "KARAT_METER_PRINTOUT",
+      "expected_weight": null,
+      "expected_purity": 83.33,
+      "expected_unit": "%",
+      "image_condition": "CLEAR_SHARP",
+      "expected_behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    {
+      "filename": "slip_04_dual_weight_purity_50g_9160.png",
+      "category": "KARAT_METER_PRINTOUT",
+      "expected_weight": 50.0,
+      "expected_purity": 91.6,
+      "expected_unit": "g, %",
+      "image_condition": "CLEAR_DUAL_READING",
+      "expected_behavior": "SUCCESSFUL_EXTRACTION"
+    },
+    {
+      "filename": "slip_05_rotated_poor_light.png",
+      "category": "KARAT_METER_PRINTOUT",
+      "expected_weight": null,
+      "expected_purity": 91.6,
+      "expected_unit": "%",
+      "image_condition": "ROTATED_AND_POOR_LIGHTING",
+      "expected_behavior": "SUCCESSFUL_EXTRACTION_OR_WARNING"
+    },
+    {
+      "filename": "slip_06_obscured_missing_purity.png",
+      "category": "KARAT_METER_PRINTOUT",
+      "expected_weight": 34.25,
+      "expected_purity": null,
+      "expected_unit": "g",
+      "image_condition": "PARTIALLY_OBSCURED_MISSING_PURITY",
+      "expected_behavior": "PARTIAL_EXTRACTION_WARNING"
+    }
+  ]
+}

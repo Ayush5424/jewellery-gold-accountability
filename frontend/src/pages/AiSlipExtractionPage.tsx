@@ -49,6 +49,10 @@ export const AiSlipExtractionPage: React.FC<{ onNavigateToLedger?: () => void }>
   const [submitSuccess, setSubmitSuccess] = useState<GoldLedgerEntry | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Discrepancy & Mismatch State
+  const [mismatchResolved, setMismatchResolved] = useState(false);
+  const [mismatchReason, setMismatchReason] = useState('');
+
   useEffect(() => {
     // Load active jobs and karigars for transaction assignment
     Promise.all([
@@ -74,6 +78,8 @@ export const AiSlipExtractionPage: React.FC<{ onNavigateToLedger?: () => void }>
     setExtractError(null);
     setSubmitSuccess(null);
     setSubmitError(null);
+    setMismatchResolved(false);
+    setMismatchReason('');
     runExtraction(file);
   };
 
@@ -155,6 +161,23 @@ export const AiSlipExtractionPage: React.FC<{ onNavigateToLedger?: () => void }>
     }
   };
 
+  // Discrepancy calculation between typed values and AI reading
+  const weightNumVal = parseFloat(grossWeight);
+  const purityNumVal = parseFloat(purity);
+
+  const hasWeightMismatch =
+    extractedData?.weight != null &&
+    !isNaN(weightNumVal) &&
+    Math.abs(weightNumVal - extractedData.weight) > 0.0001;
+
+  const hasPurityMismatch =
+    extractedData?.purity != null &&
+    !isNaN(purityNumVal) &&
+    Math.abs(purityNumVal - extractedData.purity) > 0.01;
+
+  const hasMismatch = hasWeightMismatch || hasPurityMismatch;
+  const isBlockedByMismatch = hasMismatch && !mismatchResolved;
+
   // Fine Gold Preview Calculation (BigDecimal logic replica: round(gross * purity / 100, 3))
   const calculatedFineGold = () => {
     const w = parseFloat(grossWeight);
@@ -169,6 +192,11 @@ export const AiSlipExtractionPage: React.FC<{ onNavigateToLedger?: () => void }>
       setSubmitError('Please select a valid Job Order to assign this transaction.');
       return;
     }
+    if (isBlockedByMismatch) {
+      setSubmitError('Saving is blocked: The manually typed value differs from the AI reading. Please resolve the discrepancy below before posting.');
+      return;
+    }
+
     const weightNum = parseFloat(grossWeight);
     const purityNum = parseFloat(purity);
     if (isNaN(weightNum) || weightNum <= 0) {
@@ -186,12 +214,16 @@ export const AiSlipExtractionPage: React.FC<{ onNavigateToLedger?: () => void }>
       let result: GoldLedgerEntry;
       const idempotencyKey = generateIdempotencyKey();
 
+      const finalRemarks = hasMismatch && mismatchResolved
+        ? `${remarks || 'AI scale slip verified'} [Manual Override: ${mismatchReason}]`
+        : (remarks || `AI scale slip verified [${selectedFile?.name || 'slip'}]`);
+
       if (transactionType === 'ISSUE') {
         result = await api.issueGold({
           jobId: parseInt(selectedJobId),
           grossWeight: weightNum,
           purity: purityNum,
-          remarks: remarks || `AI scale slip verified [${selectedFile?.name || 'slip'}]`,
+          remarks: finalRemarks,
           aiExtracted: true,
           idempotencyKey,
         });
@@ -203,7 +235,7 @@ export const AiSlipExtractionPage: React.FC<{ onNavigateToLedger?: () => void }>
           purity: purityNum,
           huid: huid || undefined,
           itemDescription: itemDescription || undefined,
-          remarks: remarks || `AI scale slip verified [${selectedFile?.name || 'slip'}]`,
+          remarks: finalRemarks,
           aiExtracted: true,
           idempotencyKey,
         });
@@ -620,6 +652,89 @@ export const AiSlipExtractionPage: React.FC<{ onNavigateToLedger?: () => void }>
                 />
               </div>
 
+              {/* Mismatch Warning & Resolution Banner */}
+              {hasMismatch && (
+                <div className={`p-4 rounded-lg border text-xs space-y-2.5 ${
+                  mismatchResolved
+                    ? 'bg-emerald-50/80 border-emerald-300 text-emerald-900'
+                    : 'bg-rose-50 border-rose-300 text-rose-950'
+                }`}>
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className={`w-4 h-4 shrink-0 mt-0.5 ${mismatchResolved ? 'text-emerald-600' : 'text-rose-600'}`} />
+                    <div className="flex-1">
+                      <p className="font-bold">
+                        {mismatchResolved ? 'Manual Discrepancy Override Resolved' : 'Manual Entry Discrepancy with AI Reading Detected'}
+                      </p>
+                      <div className="mt-1 font-mono text-[11px] space-y-0.5">
+                        {hasWeightMismatch && (
+                          <p>
+                            • Gross Weight: AI read <span className="underline font-bold">{extractedData?.weight?.toFixed(3)} g</span> vs Typed <span className="underline font-bold">{grossWeight} g</span>
+                          </p>
+                        )}
+                        {hasPurityMismatch && (
+                          <p>
+                            • Purity Touch: AI read <span className="underline font-bold">{extractedData?.purity?.toFixed(2)} %</span> vs Typed <span className="underline font-bold">{purity} %</span>
+                          </p>
+                        )}
+                      </div>
+                      {!mismatchResolved && (
+                        <p className="text-[11px] text-rose-700 font-semibold mt-1">
+                          Saving is blocked until the mismatch between the photo reading and typed values is explicitly resolved.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {!mismatchResolved ? (
+                    <div className="pt-2 border-t border-rose-200/80 space-y-2">
+                      <div>
+                        <label className="block text-[11px] font-medium text-rose-900 mb-1">
+                          Reason for overriding AI reading (required to resolve):
+                        </label>
+                        <input
+                          type="text"
+                          value={mismatchReason}
+                          onChange={(e) => setMismatchReason(e.target.value)}
+                          placeholder="e.g. Scale tare container deducted, light reflection on decimal, lab certificate verification"
+                          className="w-full p-2 bg-white border border-rose-300 rounded text-xs text-slate-800 focus:outline-hidden"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-rose-700 italic">
+                          Photo comparison verified by Issue Clerk
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!mismatchReason.trim()) {
+                              alert('Please enter a brief reason for overriding the AI slip reading.');
+                              return;
+                            }
+                            setMismatchResolved(true);
+                          }}
+                          className="px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded text-xs font-semibold shadow-xs"
+                        >
+                          Confirm Manual Override & Resolve
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between pt-1 border-t border-emerald-200 text-[11px]">
+                      <span className="text-emerald-800">
+                        Resolved: <em>"{mismatchReason}"</em>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setMismatchResolved(false)}
+                        className="text-xs text-slate-600 underline hover:text-slate-900"
+                      >
+                        Edit Override
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Confirmation CTA */}
               <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
                 <div className="text-[11px] text-slate-500 font-mono">
@@ -628,13 +743,22 @@ export const AiSlipExtractionPage: React.FC<{ onNavigateToLedger?: () => void }>
 
                 <button
                   type="submit"
-                  disabled={submitting || !selectedJobId || !grossWeight}
-                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-semibold text-xs rounded-md shadow flex items-center gap-2 transition-colors disabled:opacity-50"
+                  disabled={submitting || !selectedJobId || !grossWeight || isBlockedByMismatch}
+                  className={`px-5 py-2.5 font-semibold text-xs rounded-md shadow flex items-center gap-2 transition-colors ${
+                    isBlockedByMismatch
+                      ? 'bg-slate-300 text-slate-600 cursor-not-allowed'
+                      : 'bg-amber-600 hover:bg-amber-500 text-slate-950'
+                  }`}
                 >
                   {submitting ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                       <span>Posting to Authoritative Ledger...</span>
+                    </>
+                  ) : isBlockedByMismatch ? (
+                    <>
+                      <ShieldAlert className="w-4 h-4 text-rose-600" />
+                      <span>Resolve Mismatch to Save</span>
                     </>
                   ) : (
                     <>
