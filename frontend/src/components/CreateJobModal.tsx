@@ -53,15 +53,27 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
     if (!isOpen) return;
 
     setErrorMessage(null);
-    setLoadingKarigars(true);
+    setDescription('');
+    setItemCategory('CHAIN');
+    setAllowedWastagePercent(CATEGORY_DEFAULT_WASTAGE.CHAIN.toFixed(2));
+    setIsOverridden(false);
+    setOverrideReason('');
 
+    // Synchronously set karigarId to initialKarigarId if provided
+    if (initialKarigarId && String(initialKarigarId).trim() !== '') {
+      setKarigarId(String(initialKarigarId));
+    } else {
+      setKarigarId('');
+    }
+
+    setLoadingKarigars(true);
     api.getKarigars()
       .then((data) => {
         setKarigars(data);
-        if (initialKarigarId) {
+        if (initialKarigarId && String(initialKarigarId).trim() !== '') {
           setKarigarId(String(initialKarigarId));
-        } else if (data.length > 0 && !karigarId) {
-          setKarigarId(String(data[0].id));
+        } else if (data.length > 0) {
+          setKarigarId((prev) => prev || String(data[0].id));
         }
       })
       .catch((err) => {
@@ -139,7 +151,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   const standardWastage = CATEGORY_DEFAULT_WASTAGE[itemCategory];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in duration-150" data-testid="create-job-modal">
       <div className="bg-white rounded-lg border border-slate-200 shadow-xl w-full max-w-xl overflow-hidden">
         {/* Modal Header */}
         <div className="bg-slate-900 px-5 py-3.5 flex items-center justify-between text-white">
@@ -182,6 +194,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
             ) : (
               <select
                 required
+                data-testid="job-karigar-select"
                 value={karigarId}
                 onChange={(e) => setKarigarId(e.target.value)}
                 className="w-full p-2 border border-slate-300 rounded focus:border-slate-800 focus:outline-hidden bg-white text-slate-900 font-medium"
@@ -209,6 +222,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
               </label>
               <select
                 required
+                data-testid="job-category-select"
                 value={itemCategory}
                 onChange={(e) => handleCategoryChange(e.target.value as ItemCategory)}
                 className="w-full p-2 border border-slate-300 rounded focus:border-slate-800 focus:outline-hidden bg-white text-slate-900 font-medium"
@@ -236,6 +250,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                   min="0.01"
                   max="20.00"
                   required
+                  data-testid="job-wastage-input"
                   value={allowedWastagePercent}
                   onChange={(e) => handleWastageChange(e.target.value)}
                   className="w-full p-2 border border-slate-300 rounded focus:border-slate-800 focus:outline-hidden font-mono font-medium text-slate-900"
@@ -275,6 +290,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
             <textarea
               required
               rows={2}
+              data-testid="job-description-input"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. 916 Hallmarked Traditional Coimbatore Rope Chain (22 Karat standard design)"
@@ -302,7 +318,8 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={submitting}
+              data-testid="job-submit-btn"
+              disabled={submitting || loadingKarigars || !karigarId}
               className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded font-semibold shadow-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
             >
               {submitting ? (

@@ -12,7 +12,9 @@ export const IssueGoldPage: React.FC<{
   onNavigateToLedger: (jobId: number) => void;
   initialJobId?: number | null;
 }> = ({ onNavigateToLedger, initialJobId }) => {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const canCreateJob = hasRole('ROLE_ISSUE_CLERK', 'ROLE_FINANCE_HEAD');
+  const isKarigarUser = hasRole('ROLE_KARIGAR');
   const [karigars, setKarigars] = useState<Karigar[]>([]);
   const [jobs, setJobs] = useState<JobOrder[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,7 +50,7 @@ export const IssueGoldPage: React.FC<{
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
   const [jobCreatedNotice, setJobCreatedNotice] = useState<string | null>(null);
 
-  const isKarigarUser = user?.role === 'ROLE_KARIGAR';
+
 
   useEffect(() => {
     setLoading(true);
@@ -101,16 +103,33 @@ export const IssueGoldPage: React.FC<{
     saveFormDraft('issue_gold', updated);
   };
 
-  const handleJobCreated = (newJob: JobOrder) => {
-    setJobs(prev => [newJob, ...prev]);
+  const handleJobCreated = async (newJob: JobOrder) => {
+    setJobs(prev => {
+      const exists = prev.some(j => j.id === newJob.id);
+      return exists ? prev.map(j => (j.id === newJob.id ? newJob : j)) : [newJob, ...prev];
+    });
+    const newKarigarId = newJob.karigar ? String(newJob.karigar.id) : formData.karigarId;
     const updated = {
       ...formData,
       jobId: String(newJob.id),
-      karigarId: newJob.karigar ? String(newJob.karigar.id) : formData.karigarId,
+      karigarId: newKarigarId,
     };
     setFormData(updated);
     saveFormDraft('issue_gold', updated);
-    setJobCreatedNotice(`Job Order ${newJob.jobCode} created and activated! You can now enter weight details below to issue gold.`);
+    setShowCreateJobModal(false);
+    setJobCreatedNotice(
+      `Job Order ${newJob.jobCode} (${newJob.itemCategory}) created for ${
+        newJob.karigar ? newJob.karigar.name : 'Artisan'
+      } and automatically selected. Enter bullion details below to issue.`
+    );
+
+    try {
+      const freshJobs = await api.getJobs();
+      const activeJobs = freshJobs.filter(j => j.status !== 'RECONCILED');
+      setJobs(activeJobs);
+    } catch (e) {
+      console.warn('Background sync of jobs failed', e);
+    }
   };
 
   // Job selection logic: selecting a job automatically sets karigarId if known
@@ -124,6 +143,18 @@ export const IssueGoldPage: React.FC<{
     setFormData(updated);
     saveFormDraft('issue_gold', updated);
   };
+
+  // Invariant: Ensure selected job belongs to currently filtered karigar
+  useEffect(() => {
+    if (formData.karigarId && formData.jobId) {
+      const matched = jobs.find(j => String(j.id) === formData.jobId);
+      if (matched?.karigar && String(matched.karigar.id) !== formData.karigarId) {
+        const updated = { ...formData, jobId: '' };
+        setFormData(updated);
+        saveFormDraft('issue_gold', updated);
+      }
+    }
+  }, [formData.karigarId, formData.jobId, jobs]);
 
   // Karigar selection logic: choosing an artisan filters available jobs
   const handleKarigarSelect = (karigarId: string) => {
@@ -279,11 +310,12 @@ export const IssueGoldPage: React.FC<{
                   <RefreshCw className="w-3 h-3 animate-spin" /> Fetching active orders...
                 </span>
               )}
-              {!isKarigarUser && (
+              {canCreateJob && (
                 <button
                   type="button"
                   onClick={() => setShowCreateJobModal(true)}
                   className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded font-semibold text-[11px] flex items-center gap-1 transition-colors"
+                  data-testid="new-job-order-btn"
                 >
                   <Plus className="w-3 h-3 text-amber-700" /> + New Job Order
                 </button>
@@ -303,6 +335,7 @@ export const IssueGoldPage: React.FC<{
                 </div>
               ) : (
                 <select
+                  data-testid="artisan-filter-select"
                   value={formData.karigarId}
                   onChange={(e) => handleKarigarSelect(e.target.value)}
                   className="w-full p-2 border border-slate-300 rounded focus:border-slate-800 focus:outline-hidden bg-white text-slate-800 font-medium"
@@ -326,11 +359,12 @@ export const IssueGoldPage: React.FC<{
                     <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                     <span>No active fabrication orders found for this artisan.</span>
                   </div>
-                  {!isKarigarUser && (
+                  {canCreateJob && (
                     <button
                       type="button"
                       onClick={() => setShowCreateJobModal(true)}
                       className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded font-semibold text-xs flex items-center gap-1.5 shadow-2xs transition-colors"
+                      data-testid="create-job-now-btn"
                     >
                       <Plus className="w-3.5 h-3.5" /> Create Job Order Now
                     </button>
@@ -339,6 +373,7 @@ export const IssueGoldPage: React.FC<{
               ) : (
                 <select
                   required
+                  data-testid="job-order-select"
                   value={formData.jobId}
                   onChange={(e) => handleJobSelect(e.target.value)}
                   className="w-full p-2 border border-slate-300 rounded focus:border-slate-800 focus:outline-hidden bg-white text-slate-800 font-medium"
@@ -356,7 +391,7 @@ export const IssueGoldPage: React.FC<{
 
           {/* Selected Job Card Preview */}
           {selectedJob && (
-            <div className="bg-slate-50 border border-slate-200 rounded p-3 text-xs grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
+            <div data-testid="selected-job-preview-card" className="bg-slate-50 border border-slate-200 rounded p-3 text-xs grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
               <div>
                 <span className="text-slate-500">Order Code:</span>
                 <p className="font-semibold text-slate-900 font-mono">{selectedJob.jobCode}</p>
@@ -469,6 +504,14 @@ export const IssueGoldPage: React.FC<{
           </button>
         </div>
       </form>
+
+      {/* Create Job Order Modal */}
+      <CreateJobModal
+        isOpen={showCreateJobModal}
+        onClose={() => setShowCreateJobModal(false)}
+        onJobCreated={handleJobCreated}
+        initialKarigarId={formData.karigarId}
+      />
 
       {/* Review Dialog */}
       {showReview && selectedJob && (
