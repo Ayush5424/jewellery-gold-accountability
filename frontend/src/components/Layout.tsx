@@ -159,6 +159,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTa
             return (
               <button
                 key={item.id}
+                data-nav-id={item.id}
                 onClick={() => setActiveTab(item.id)}
                 className={`flex items-center gap-2 py-2.5 px-3.5 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${
                   isActive
